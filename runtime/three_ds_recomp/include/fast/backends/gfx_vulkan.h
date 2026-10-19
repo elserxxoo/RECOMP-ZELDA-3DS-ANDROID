@@ -524,6 +524,14 @@ class GfxRenderingAPIVulkan final : public GfxRenderingAPI, public Oot3d::TitleR
     void RetireNativePicaGeometry(uint64_t identity);
     void ReleaseRetiredNativePicaGeometryBuffers(uint32_t frameIndex);
     void CreateNativePicaScanoutPipeline();
+
+    // --- Android secondary display (3DS bottom screen) ---
+    bool QueueNativePicaSecondaryPresent(const GfxNativePicaDisplayTransferView& transfer, std::string* error);
+    void RunSecondaryPresentAfterSubmit() noexcept;
+    void DestroySecondaryPresenter() noexcept;
+    void DestroySecondarySwapchain() noexcept;
+    bool CreateSecondarySwapchain(void* nativeWindow);
+    bool EnsureSecondaryResources();
     void CreateNativePicaRenderPass();
     void ApplyNativePicaSampleCount(VkSampleCountFlagBits sampleCount);
     NativePicaRenderTarget& GetOrCreateNativePicaRenderTarget(const GfxNativePicaDrawView& draw,
@@ -754,6 +762,33 @@ class GfxRenderingAPIVulkan final : public GfxRenderingAPI, public Oot3d::TitleR
     std::map<uint64_t, NativePicaLightingLutTexture> mNativePicaLightingLuts;
     std::map<NativePicaRenderTargetKey, NativePicaRenderTarget> mNativePicaRenderTargets;
     std::map<std::pair<uint64_t, uint32_t>, NativePicaDisplayImage> mNativePicaDisplayImages;
+
+    struct SecondaryPresenterState {
+        void* NativeWindow = nullptr;
+        uint32_t WindowGeneration = 0;
+        bool Failed = false;
+        bool LoggedFailure = false;
+        VkSurfaceKHR Surface = VK_NULL_HANDLE;
+        VkSwapchainKHR Swapchain = VK_NULL_HANDLE;
+        VkFormat Format = VK_FORMAT_UNDEFINED;
+        VkExtent2D Extent{};
+        std::vector<VkImage> Images;
+        std::vector<VkImageView> Views;
+        std::vector<VkFramebuffer> Framebuffers;
+        std::vector<VkSemaphore> RenderFinished;
+        VkRenderPass RenderPass = VK_NULL_HANDLE;
+        VkPipeline Pipeline = VK_NULL_HANDLE;
+        VkDescriptorPool DescriptorPool = VK_NULL_HANDLE;
+        VkDescriptorSet Descriptor = VK_NULL_HANDLE;
+        VkCommandPool CommandPool = VK_NULL_HANDLE;
+        VkCommandBuffer Command = VK_NULL_HANDLE;
+        VkFence Fence = VK_NULL_HANDLE;
+        VkSemaphore AcquireSemaphore = VK_NULL_HANDLE;
+        bool HasPending = false;
+        uint64_t PendingNamespace = 0;
+        uint32_t PendingAddress = 0;
+        uint32_t PendingFlags = 0;
+    } mSecondary;
     std::map<std::pair<uint64_t, uint32_t>, NativePicaRenderTargetKey> mNativePicaDisplayDepthTargets;
     std::set<uint32_t> mInvalidatedNativePicaRenderTargetAddresses;
     NativePicaRenderTarget* mActiveNativePicaRenderTarget = nullptr;

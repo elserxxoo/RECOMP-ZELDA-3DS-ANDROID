@@ -113,6 +113,7 @@ BuildPicaCompositionDrawReference(const PicaDrawView& draw) noexcept {
 enum class PicaPresentationMode : uint8_t {
     Replace,
     AlphaOverlay,
+    SecondaryScreen,
 };
 
 struct PicaDisplayTransferView {

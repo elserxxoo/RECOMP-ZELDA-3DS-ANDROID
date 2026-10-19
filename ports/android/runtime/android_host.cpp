@@ -22,6 +22,7 @@
 #include <ship/config/Config.h>
 
 #include "fast/backends/gfx_android.h"
+#include "fast/backends/gfx_android_secondary.h"
 #include "fast/Fast3dWindow.h"
 #include "fast/backends/gfx_rendering_api.h"
 #include "fast/oot3d/graphics_settings_persistence.h"
@@ -358,6 +359,29 @@ Java_org_triaevum_android_TriAevumActivity_nativeSurfaceDestroyed(
   __android_log_print(ANDROID_LOG_INFO, "TriAevum", "nativeSurfaceDestroyed");
   Fast::GfxWindowBackendAndroid::NotifySurfaceDestroyed();
   FlushAndroidPipelineCache();
+}
+
+// ---- Secondary display (dual-screen) surface hand-off ----
+JNIEXPORT void JNICALL
+Java_org_triaevum_android_SecondaryDisplayPresenter_nativeSecondarySurfaceChanged(
+    JNIEnv *env, jclass /*clazz*/, jobject surface, jint width, jint height) {
+  if (surface == nullptr) {
+    return;
+  }
+  ANativeWindow *win = ANativeWindow_fromSurface(env, surface);
+  __android_log_print(ANDROID_LOG_INFO, "TriAevum",
+                      "nativeSecondarySurfaceChanged: ANativeWindow=%p, %dx%d",
+                      win, width, height);
+  Fast::AndroidSecondary::SetWindow(win);  // takes the reference
+  GetAndroidOverlayInputState().secondaryDisplayActive.store(win != nullptr);
+}
+
+JNIEXPORT void JNICALL
+Java_org_triaevum_android_SecondaryDisplayPresenter_nativeSecondarySurfaceDestroyed(
+    JNIEnv * /*env*/, jclass /*clazz*/) {
+  __android_log_print(ANDROID_LOG_INFO, "TriAevum", "nativeSecondarySurfaceDestroyed");
+  GetAndroidOverlayInputState().secondaryDisplayActive.store(false);
+  Fast::AndroidSecondary::SetWindow(nullptr);
 }
 
 JNIEXPORT void JNICALL

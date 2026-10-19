@@ -74,6 +74,7 @@
 #include "oot3d_typed_gameplay_bridge.h"
 
 #if defined(__ANDROID__)
+#include <android/log.h>
 #include "android_host.h"
 #endif
 
@@ -5696,6 +5697,41 @@ void RunOot3dNativeA32Window(const Oot3dNativeGameLaunch &launch) {
               ++nativeBottomFrontendPresentationCount;
             }
           }
+#if defined(__ANDROID__)
+          // Dual-screen: when a secondary display surface is attached, always
+          // present the 3DS bottom screen to it (independent of the main window).
+          if (GetAndroidOverlayInputState().secondaryDisplayActive.load(
+                  std::memory_order_relaxed) &&
+              bottomFramebuffer.has_value()) {
+            auto secondaryBottom =
+                displayTransfersByOutput.find(bottomFramebuffer->AddressLeft);
+            if (secondaryBottom == displayTransfersByOutput.end() &&
+                bottomFramebuffer->AddressRight != 0U &&
+                bottomFramebuffer->AddressRight !=
+                    bottomFramebuffer->AddressLeft) {
+              secondaryBottom = displayTransfersByOutput.find(
+                  bottomFramebuffer->AddressRight);
+            }
+            if (secondaryBottom != displayTransfersByOutput.end() &&
+                picaPresentationScheduler.HasSnapshot(
+                    secondaryBottom->second,
+                    kVisualInterpolationRenderTargetNamespace)) {
+              std::string secondaryError;
+              if (!SubmitOot3dPicaVulkanDisplayTransfer(
+                      api, secondaryBottom->second, true, &secondaryError,
+                      kVisualInterpolationRenderTargetNamespace,
+                      Oot3d::Renderer::PicaPresentationMode::SecondaryScreen)) {
+                static bool loggedSecondaryError = false;
+                if (!loggedSecondaryError) {
+                  loggedSecondaryError = true;
+                  __android_log_print(ANDROID_LOG_WARN, "TriAevum",
+                                      "secondary display present failed: %s",
+                                      secondaryError.c_str());
+                }
+              }
+            }
+          }
+#endif
         }
         phaseTiming.VisualPresentationSeconds +=
             SecondsSince(visualPresentationStart);

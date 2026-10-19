@@ -449,6 +449,7 @@ void GfxRenderingAPIVulkan::CreateNativePicaShaderResources() {
 }
 
 void GfxRenderingAPIVulkan::DestroyNativePicaShaderResources() {
+    DestroySecondarySwapchain();
     EndNativePicaRenderPass();
     for (auto& [key, texture] : mNativePicaTextures) {
         DestroyTexture(texture);
@@ -5821,6 +5822,13 @@ bool GfxRenderingAPIVulkan::SubmitPicaDisplayTransfer(
             display.Initialized = true;
             mDiagnostics.RecordDisplayTransfer(false);
             return true;
+        }
+
+        if (transfer.PresentationMode ==
+            GfxNativePicaPresentationMode::SecondaryScreen) {
+            // Android dual-screen: the bottom snapshot is presented to the
+            // secondary display swapchain after the main frame is submitted.
+            return QueueNativePicaSecondaryPresent(transfer, error);
         }
 
         const auto displayFound = mNativePicaDisplayImages.find(
