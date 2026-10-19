@@ -376,6 +376,39 @@ Java_org_triaevum_android_SecondaryDisplayPresenter_nativeSecondarySurfaceChange
   GetAndroidOverlayInputState().secondaryDisplayActive.store(win != nullptr);
 }
 
+// ---- Device motion (gyroscope / accelerometer) ----
+JNIEXPORT void JNICALL
+Java_org_triaevum_android_MotionSensorBridge_nativeSetMotionEnabled(
+    JNIEnv * /*env*/, jclass /*clazz*/, jboolean enabled) {
+  auto &state = GetAndroidOverlayInputState();
+  state.motionEnabled.store(enabled == JNI_TRUE, std::memory_order_relaxed);
+  if (enabled != JNI_TRUE) {
+    state.motionValid.store(false, std::memory_order_relaxed);
+  }
+  __android_log_print(ANDROID_LOG_INFO, "TriAevum", "motion input %s",
+                      enabled == JNI_TRUE ? "enabled" : "disabled");
+}
+
+JNIEXPORT void JNICALL
+Java_org_triaevum_android_MotionSensorBridge_nativeMotionSample(
+    JNIEnv * /*env*/, jclass /*clazz*/, jfloat gx, jfloat gy, jfloat gz,
+    jfloat ax, jfloat ay, jfloat az) {
+  auto &state = GetAndroidOverlayInputState();
+  state.gyroX.store(gx, std::memory_order_relaxed);
+  state.gyroY.store(gy, std::memory_order_relaxed);
+  state.gyroZ.store(gz, std::memory_order_relaxed);
+  state.accelX.store(ax, std::memory_order_relaxed);
+  state.accelY.store(ay, std::memory_order_relaxed);
+  state.accelZ.store(az, std::memory_order_relaxed);
+  state.motionValid.store(true, std::memory_order_release);
+}
+
+JNIEXPORT void JNICALL
+Java_org_triaevum_android_MotionSensorBridge_nativeMotionStopped(
+    JNIEnv * /*env*/, jclass /*clazz*/) {
+  GetAndroidOverlayInputState().motionValid.store(false, std::memory_order_relaxed);
+}
+
 JNIEXPORT void JNICALL
 Java_org_triaevum_android_SecondaryDisplayPresenter_nativeSecondaryTouch(
     JNIEnv * /*env*/, jclass /*clazz*/, jfloat x, jfloat y, jint width,

@@ -108,6 +108,7 @@ public final class TriAevumConfigDialog extends Dialog {
     private TextView mTvOpacityLabel;
     private CheckBox mCbHaptic;
     private CheckBox mCbSwapScreens;
+    private CheckBox mCbGyro;
     private CheckBox mCbTouchScreen;
     private CheckBox mCbJoystickRelCenter;
     private CheckBox mCbDpadSlide;
@@ -238,6 +239,7 @@ public final class TriAevumConfigDialog extends Dialog {
         mTvOpacityLabel      = findViewById(R.id.tv_opacity_label);
         mCbHaptic            = findViewById(R.id.cb_haptic);
         mCbSwapScreens       = findViewById(R.id.cb_swap_screens);
+        mCbGyro              = findViewById(R.id.cb_gyro);
         mCbTouchScreen       = findViewById(R.id.cb_touch_screen);
         mCbJoystickRelCenter = findViewById(R.id.cb_joystick_rel_center);
         mCbDpadSlide         = findViewById(R.id.cb_dpad_slide);
@@ -436,6 +438,13 @@ public final class TriAevumConfigDialog extends Dialog {
         mCbShowOverlay.setChecked(showOverlay);
         mCbHaptic.setChecked(haptic);
         mCbSwapScreens.setChecked(swapScr);
+        boolean gyroAvailable = MotionSensorBridge.hasGyroscope(getContext());
+        mCbGyro.setEnabled(gyroAvailable);
+        mCbGyro.setChecked(gyroAvailable && mPrefs.getBoolean(MotionSensorBridge.PREF_KEY, false));
+        if (!gyroAvailable) {
+            ((android.widget.TextView) findViewById(R.id.tv_gyro_label))
+                .setText("Giroscopio (no disponible en este dispositivo)");
+        }
         mCbTouchScreen.setChecked(touchScreen);
         mCbJoystickRelCenter.setChecked(joyRel);
         mCbDpadSlide.setChecked(dpadSlide);
@@ -947,6 +956,7 @@ public final class TriAevumConfigDialog extends Dialog {
             .putBoolean("EmulationMenuSettings_ShowOverlay", showOverlay)
             .putBoolean("EmulationMenuSettings_HapticFeedback", haptic)
             .putBoolean("EmulationMenuSettings_SwapScreens", swapScr)
+            .putBoolean(MotionSensorBridge.PREF_KEY, mCbGyro.isChecked())
             .putBoolean("EmulationMenuSettings_TouchEnabled", touchScreen)
             .putBoolean("EmulationMenuSettings_JoystickRelCenter", joyRel)
             .putBoolean("EmulationMenuSettings_DpadSlideEnable", dpadSlide)
@@ -964,6 +974,7 @@ public final class TriAevumConfigDialog extends Dialog {
         } catch (Throwable t) {
             Log.w(TAG, "Failed to apply native control settings", t);
         }
+        MotionSensorBridge.refresh();
 
         // Driver de GPU customizado (Turnip/Vulkan)
         if (mSpGpuDriver != null && mCustomDriverManager != null) {

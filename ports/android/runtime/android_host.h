@@ -23,6 +23,17 @@ struct AndroidOverlayInputState {
   std::atomic<float> secondaryTouchY{0.0F};
   std::atomic<uint32_t> secondaryTouchW{0U};
   std::atomic<uint32_t> secondaryTouchH{0U};
+  // Device motion (Android SensorManager), already rotated into the screen
+  // frame by the Java side: X right, Y up, Z toward the player.
+  // gyro* in rad/s, accel* in m/s^2 (includes gravity).
+  std::atomic<bool> motionEnabled{false};
+  std::atomic<bool> motionValid{false};
+  std::atomic<float> gyroX{0.0F};
+  std::atomic<float> gyroY{0.0F};
+  std::atomic<float> gyroZ{0.0F};
+  std::atomic<float> accelX{0.0F};
+  std::atomic<float> accelY{0.0F};
+  std::atomic<float> accelZ{0.0F};
 };
 
 namespace Oot3dNativeGame {

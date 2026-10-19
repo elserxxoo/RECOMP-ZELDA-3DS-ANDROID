@@ -2855,6 +2855,36 @@ PollNativeA32Input(Fast::Fast3dWindow &window,
 #endif
   }
 #endif
+#if defined(__ANDROID__)
+  {
+    // Built-in gyroscope/accelerometer of the handheld (opt-in from the
+    // settings menu). Same axis/unit conversion as the SDL controller path
+    // above: Android's screen-frame sensors match SDL's "held in front of
+    // you" convention.
+    const auto &androidMotion = GetAndroidOverlayInputState();
+    if (androidMotion.motionEnabled.load(std::memory_order_relaxed) &&
+        androidMotion.motionValid.load(std::memory_order_acquire) &&
+        !host.ControllerMotion.GyroscopeValid) {
+      constexpr float kGravityMetersPerSecondSquared = 9.80665F;
+      constexpr float kRadiansToDegrees = 57.2957795130823208768F;
+      const float gx = androidMotion.gyroX.load(std::memory_order_relaxed);
+      const float gy = androidMotion.gyroY.load(std::memory_order_relaxed);
+      const float gz = androidMotion.gyroZ.load(std::memory_order_relaxed);
+      const float ax = androidMotion.accelX.load(std::memory_order_relaxed);
+      const float ay = androidMotion.accelY.load(std::memory_order_relaxed);
+      const float az = androidMotion.accelZ.load(std::memory_order_relaxed);
+      host.ControllerMotion.GyroscopeDegreesPerSecond = {
+          -gx * kRadiansToDegrees, gy * kRadiansToDegrees,
+          -gz * kRadiansToDegrees};
+      host.ControllerMotion.GyroscopeValid = true;
+      host.ControllerMotion.Accelerometer = {
+          ax / kGravityMetersPerSecondSquared,
+          -ay / kGravityMetersPerSecondSquared,
+          az / kGravityMetersPerSecondSquared};
+      host.ControllerMotion.AccelerometerValid = true;
+    }
+  }
+#endif
   controls.ObserveMotion(host.ControllerMotion);
   if (hostGuiVisible) {
     host.ControllerMotion = {};

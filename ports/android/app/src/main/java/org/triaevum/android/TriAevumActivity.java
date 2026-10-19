@@ -519,6 +519,7 @@ public final class TriAevumActivity extends Activity {
         hideSystemBars();
         nativeOnResume();
         SecondaryDisplayPresenter.onActivityResume(this);
+        MotionSensorBridge.onActivityResume(this);
         updateFpsCounterVisibility();
         syncDisplayRefreshRate();
     }
@@ -550,6 +551,7 @@ public final class TriAevumActivity extends Activity {
         super.onPause();
         mFpsHandler.removeCallbacks(mFpsUpdateRunnable);
         SecondaryDisplayPresenter.onActivityPause();
+        MotionSensorBridge.onActivityPause();
         nativeOnPause();
         if (mWindroidOverlay != null) {
             mWindroidOverlay.releaseAll();
