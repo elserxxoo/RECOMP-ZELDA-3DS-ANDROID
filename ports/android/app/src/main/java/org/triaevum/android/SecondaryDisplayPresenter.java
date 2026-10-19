@@ -8,6 +8,8 @@ import android.hardware.display.DisplayManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Display;
+import android.view.MotionEvent;
+import android.view.View;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -27,6 +29,7 @@ public final class SecondaryDisplayPresenter {
 
     public static native void nativeSecondarySurfaceChanged(Surface surface, int width, int height);
     public static native void nativeSecondarySurfaceDestroyed();
+    public static native void nativeSecondaryTouch(float x, float y, int width, int height, boolean pressed);
 
     private static SecondaryDisplayPresenter sInstance;
 
@@ -61,6 +64,14 @@ public final class SecondaryDisplayPresenter {
             nativeSecondarySurfaceChanged(surface, width, height);
         } catch (UnsatisfiedLinkError error) {
             Log.w(TAG, "Native runtime has no secondary display support", error);
+        }
+    }
+
+    private static void notifyTouch(float x, float y, int width, int height, boolean pressed) {
+        try {
+            nativeSecondaryTouch(x, y, width, height, pressed);
+        } catch (UnsatisfiedLinkError error) {
+            // Native runtime without dual-screen support.
         }
     }
 
@@ -215,6 +226,18 @@ public final class SecondaryDisplayPresenter {
             root.setBackgroundColor(Color.BLACK);
             SurfaceView view = new SurfaceView(getContext());
             view.getHolder().addCallback(this);
+            view.setOnTouchListener(new View.OnTouchListener() {
+                @Override
+                public boolean onTouch(View v, MotionEvent event) {
+                    final int action = event.getActionMasked();
+                    if (action == MotionEvent.ACTION_DOWN || action == MotionEvent.ACTION_MOVE) {
+                        notifyTouch(event.getX(0), event.getY(0), v.getWidth(), v.getHeight(), true);
+                    } else if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {
+                        notifyTouch(0f, 0f, v.getWidth(), v.getHeight(), false);
+                    }
+                    return true;
+                }
+            });
             root.addView(view, new FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
             setContentView(root);

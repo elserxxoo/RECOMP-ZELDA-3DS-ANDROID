@@ -17,6 +17,12 @@ struct AndroidOverlayInputState {
   std::atomic<bool> swapScreens{false};
   // True while a secondary-display surface is attached (dual-screen mode).
   std::atomic<bool> secondaryDisplayActive{false};
+  // Touch on the secondary display (3DS bottom screen), in secondary-view pixels.
+  std::atomic<bool> secondaryTouchPressed{false};
+  std::atomic<float> secondaryTouchX{0.0F};
+  std::atomic<float> secondaryTouchY{0.0F};
+  std::atomic<uint32_t> secondaryTouchW{0U};
+  std::atomic<uint32_t> secondaryTouchH{0U};
 };
 
 namespace Oot3dNativeGame {

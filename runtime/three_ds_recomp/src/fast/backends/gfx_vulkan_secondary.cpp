@@ -256,7 +256,15 @@ bool GfxRenderingAPIVulkan::CreateSecondarySwapchain(void* nativeWindow) {
     swapchainInfo.imageArrayLayers = 1;
     swapchainInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
     swapchainInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
-    swapchainInfo.preTransform = caps.currentTransform;
+    // Scanout is in logical window coordinates; let the compositor apply the
+    // display rotation (same policy as the main swapchain).
+    swapchainInfo.preTransform = (caps.supportedTransforms & VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR) != 0U
+                                     ? VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR
+                                     : caps.currentTransform;
+    __android_log_print(ANDROID_LOG_INFO, kSecondaryTag,
+                        "Secondary display surface: %ux%u, currentTransform %u, preTransform %u", extent.width,
+                        extent.height, static_cast<uint32_t>(caps.currentTransform),
+                        static_cast<uint32_t>(swapchainInfo.preTransform));
     swapchainInfo.compositeAlpha = (caps.supportedCompositeAlpha & VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR) != 0U
                                        ? VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR
                                        : VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR;

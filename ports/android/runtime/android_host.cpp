@@ -377,9 +377,26 @@ Java_org_triaevum_android_SecondaryDisplayPresenter_nativeSecondarySurfaceChange
 }
 
 JNIEXPORT void JNICALL
+Java_org_triaevum_android_SecondaryDisplayPresenter_nativeSecondaryTouch(
+    JNIEnv * /*env*/, jclass /*clazz*/, jfloat x, jfloat y, jint width,
+    jint height, jboolean pressed) {
+  auto &state = GetAndroidOverlayInputState();
+  if (width <= 0 || height <= 0) {
+    state.secondaryTouchPressed.store(false, std::memory_order_relaxed);
+    return;
+  }
+  state.secondaryTouchW.store(static_cast<uint32_t>(width), std::memory_order_relaxed);
+  state.secondaryTouchH.store(static_cast<uint32_t>(height), std::memory_order_relaxed);
+  state.secondaryTouchX.store(x, std::memory_order_relaxed);
+  state.secondaryTouchY.store(y, std::memory_order_relaxed);
+  state.secondaryTouchPressed.store(pressed == JNI_TRUE, std::memory_order_release);
+}
+
+JNIEXPORT void JNICALL
 Java_org_triaevum_android_SecondaryDisplayPresenter_nativeSecondarySurfaceDestroyed(
     JNIEnv * /*env*/, jclass /*clazz*/) {
   __android_log_print(ANDROID_LOG_INFO, "TriAevum", "nativeSecondarySurfaceDestroyed");
+  GetAndroidOverlayInputState().secondaryTouchPressed.store(false);
   GetAndroidOverlayInputState().secondaryDisplayActive.store(false);
   Fast::AndroidSecondary::SetWindow(nullptr);
 }

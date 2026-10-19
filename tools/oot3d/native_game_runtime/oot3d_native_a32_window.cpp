@@ -2988,6 +2988,27 @@ PollNativeA32Input(Fast::Fast3dWindow &window,
       frame.Hid.TouchPressed = true;
     }
   }
+
+  if (androidInput.secondaryTouchPressed.load(std::memory_order_acquire)) {
+    const uint32_t secondaryW =
+        androidInput.secondaryTouchW.load(std::memory_order_relaxed);
+    const uint32_t secondaryH =
+        androidInput.secondaryTouchH.load(std::memory_order_relaxed);
+    if (secondaryW != 0U && secondaryH != 0U) {
+      const auto secondaryTouch = Oot3dNativeGame::MapHostPointerToNativeA32Touch(
+          static_cast<int32_t>(
+              androidInput.secondaryTouchX.load(std::memory_order_relaxed)),
+          static_cast<int32_t>(
+              androidInput.secondaryTouchY.load(std::memory_order_relaxed)),
+          secondaryW, secondaryH, true,
+          Oot3dNativeGame::NativeA32TouchPresentation::NativeLowerScreen320x240);
+      if (secondaryTouch.Inside) {
+        frame.Hid.TouchX = secondaryTouch.X;
+        frame.Hid.TouchY = secondaryTouch.Y;
+        frame.Hid.TouchPressed = true;
+      }
+    }
+  }
 #endif
   return frame;
 }
