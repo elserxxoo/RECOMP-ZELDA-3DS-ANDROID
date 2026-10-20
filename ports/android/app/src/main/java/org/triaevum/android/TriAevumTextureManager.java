@@ -149,13 +149,13 @@ public final class TriAevumTextureManager {
         if (callback == null) return;
 
         if (path == null || path.trim().isEmpty()) {
-            callback.onCountReady(0, "Nenhum diretório selecionado");
+            callback.onCountReady(0, "No directory selected");
             return;
         }
 
         File dir = new File(path);
         if (!dir.exists() || !dir.isDirectory()) {
-            callback.onCountReady(0, "Diretório inacessível ou não encontrado");
+            callback.onCountReady(0, "Directory inaccessible or not found");
             return;
         }
 
@@ -163,11 +163,11 @@ public final class TriAevumTextureManager {
             int count = countTexturesRecursively(dir, 50000);
             String summary;
             if (count == 0) {
-                summary = "Nenhuma textura (.png) encontrada nesta pasta";
+                summary = "No texture (.png) found in this folder";
             } else if (count >= 50000) {
-                summary = "Mais de 50.000 texturas encontradas";
+                summary = "More than 50,000 textures found";
             } else {
-                summary = String.format(Locale.getDefault(), "%,d texturas encontradas", count);
+                summary = String.format(Locale.getDefault(), "%,d textures found", count);
             }
 
             getMainHandler().post(() -> callback.onCountReady(count, summary));

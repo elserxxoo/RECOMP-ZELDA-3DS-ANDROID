@@ -362,12 +362,12 @@ public final class TriAevumConfigDialog extends Dialog {
         int fovProgress = Math.max(0, Math.min(5, Math.round((fov - 1.0f) / 0.05f)));
         mSbFov.setProgress(fovProgress);
         int fovPct = 100 + (fovProgress * 5);
-        mTvFovLabel.setText("Campo de Visão (FOV): " + fovPct + "%" + (fovProgress == 0 ? " (Padrão)" : ""));
+        mTvFovLabel.setText("Field of View (FOV): " + fovPct + "%" + (fovProgress == 0 ? " (Default)" : ""));
 
         mSbFov.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override public void onProgressChanged(SeekBar sb, int progress, boolean fromUser) {
                 int p = 100 + (progress * 5);
-                mTvFovLabel.setText("Campo de Visão (FOV): " + p + "%" + (progress == 0 ? " (Padrão)" : ""));
+                mTvFovLabel.setText("Field of View (FOV): " + p + "%" + (progress == 0 ? " (Default)" : ""));
             }
             @Override public void onStartTrackingTouch(SeekBar sb) {}
             @Override public void onStopTrackingTouch(SeekBar sb) {}
@@ -377,7 +377,7 @@ public final class TriAevumConfigDialog extends Dialog {
         mCbFreeCamera.setChecked(mConfig.isFreeCameraEnabled());
         int speedLevel = mConfig.getFreeCameraSpeedLevel();
         mSbCamSpeed.setProgress(speedLevel - 1); // 0-4 → levels 1-5
-        mTvCamSpeedLabel.setText("Velocidade: " + speedLevel);
+        mTvCamSpeedLabel.setText("Speed: " + speedLevel);
         mCbCamInvertX.setChecked(mConfig.isFreeCameraInvertX());
         mCbCamInvertY.setChecked(mConfig.isFreeCameraInvertY());
 
@@ -396,15 +396,15 @@ public final class TriAevumConfigDialog extends Dialog {
         // map 0.5-1.5 → seekbar 0-10
         int hudProg = Math.round((hudScale - 0.5f) / 0.1f);
         mSbHudScale.setProgress(Math.max(0, Math.min(10, hudProg)));
-        mTvHudScaleLabel.setText("Escala HUD: " + hudPct + "%");
+        mTvHudScaleLabel.setText("HUD Scale: " + hudPct + "%");
 
         // Margins (-3..16 -> seekbar 0..19)
         int marginX = mConfig.getHudMarginX();
         int marginY = mConfig.getHudMarginY();
         mSbHudMarginX.setProgress(Math.max(0, Math.min(19, marginX + 3)));
-        mTvHudMarginXLabel.setText("Margem X (Horizontal): " + marginX);
+        mTvHudMarginXLabel.setText("Margin X (Horizontal): " + marginX);
         mSbHudMarginY.setProgress(Math.max(0, Math.min(19, marginY + 3)));
-        mTvHudMarginYLabel.setText("Margem Y (Vertical): " + marginY);
+        mTvHudMarginYLabel.setText("Margin Y (Vertical): " + marginY);
 
         mCbMinimap.setChecked(mConfig.isMinimapVisible());
         mCbDpadIcons.setChecked(mConfig.isRenderDpadIcons());
@@ -443,7 +443,7 @@ public final class TriAevumConfigDialog extends Dialog {
         mCbGyro.setChecked(gyroAvailable && mPrefs.getBoolean(MotionSensorBridge.PREF_KEY, false));
         if (!gyroAvailable) {
             ((android.widget.TextView) findViewById(R.id.tv_gyro_label))
-                .setText("Giroscopio (no disponible en este dispositivo)");
+                .setText("Gyroscope (not available on this device)");
         }
         mCbTouchScreen.setChecked(touchScreen);
         mCbJoystickRelCenter.setChecked(joyRel);
@@ -453,12 +453,12 @@ public final class TriAevumConfigDialog extends Dialog {
         int overlayOpacity = 100;
         if (mOverlay != null) overlayOpacity = mOverlay.getOverlayOpacityPercent();
         mSbOpacity.setProgress(overlayOpacity);
-        mTvOpacityLabel.setText("Opacidade dos Controles: " + overlayOpacity + "%");
+        mTvOpacityLabel.setText("Controls Opacity: " + overlayOpacity + "%");
 
         // SeekBar live listeners
         mSbCamSpeed.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override public void onProgressChanged(SeekBar sb, int progress, boolean fromUser) {
-                mTvCamSpeedLabel.setText("Velocidade: " + (progress + 1));
+                mTvCamSpeedLabel.setText("Speed: " + (progress + 1));
             }
             @Override public void onStartTrackingTouch(SeekBar sb) {}
             @Override public void onStopTrackingTouch(SeekBar sb) {}
@@ -467,7 +467,7 @@ public final class TriAevumConfigDialog extends Dialog {
         mSbHudScale.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override public void onProgressChanged(SeekBar sb, int progress, boolean fromUser) {
                 float scale = 0.5f + progress * 0.1f;
-                mTvHudScaleLabel.setText("Escala HUD: " + Math.round(scale * 100) + "%");
+                mTvHudScaleLabel.setText("HUD Scale: " + Math.round(scale * 100) + "%");
             }
             @Override public void onStartTrackingTouch(SeekBar sb) {}
             @Override public void onStopTrackingTouch(SeekBar sb) {}
@@ -476,7 +476,7 @@ public final class TriAevumConfigDialog extends Dialog {
         mSbHudMarginX.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override public void onProgressChanged(SeekBar sb, int progress, boolean fromUser) {
                 int val = progress - 3;
-                mTvHudMarginXLabel.setText("Margem X (Horizontal): " + val);
+                mTvHudMarginXLabel.setText("Margin X (Horizontal): " + val);
             }
             @Override public void onStartTrackingTouch(SeekBar sb) {}
             @Override public void onStopTrackingTouch(SeekBar sb) {}
@@ -485,7 +485,7 @@ public final class TriAevumConfigDialog extends Dialog {
         mSbHudMarginY.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override public void onProgressChanged(SeekBar sb, int progress, boolean fromUser) {
                 int val = progress - 3;
-                mTvHudMarginYLabel.setText("Margem Y (Vertical): " + val);
+                mTvHudMarginYLabel.setText("Margin Y (Vertical): " + val);
             }
             @Override public void onStartTrackingTouch(SeekBar sb) {}
             @Override public void onStopTrackingTouch(SeekBar sb) {}
@@ -494,7 +494,7 @@ public final class TriAevumConfigDialog extends Dialog {
         mSbOpacity.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override public void onProgressChanged(SeekBar sb, int progress, boolean fromUser) {
                 int pct = Math.max(20, progress); // minimum 20%
-                mTvOpacityLabel.setText("Opacidade dos Controles: " + pct + "%");
+                mTvOpacityLabel.setText("Controls Opacity: " + pct + "%");
                 if (fromUser && mOverlay != null) {
                     mOverlay.setOverlayOpacityPercent(pct);
                 }
@@ -569,7 +569,7 @@ public final class TriAevumConfigDialog extends Dialog {
         btnSave.setOnClickListener(v -> {
             saveToConfig();
             mConfig.applyLiveSettings();
-            Toast.makeText(getContext(), "Configurações salvas e aplicadas!", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), "Settings saved and applied!", Toast.LENGTH_SHORT).show();
             dismiss();
         });
 
@@ -601,7 +601,7 @@ public final class TriAevumConfigDialog extends Dialog {
                 Log.w(TAG, "Failed to reset native control settings", t);
             }
             loadFromConfig();
-            Toast.makeText(getContext(), "Padrões restaurados e aplicados.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), "Defaults restored and applied.", Toast.LENGTH_SHORT).show();
         });
 
         Button btnEditHud = findViewById(R.id.btn_edit_hud_layout);
@@ -638,7 +638,7 @@ public final class TriAevumConfigDialog extends Dialog {
             btnResetControls.setOnClickListener(v -> {
                 if (mOverlay != null) {
                     mOverlay.resetControlPositions();
-                    Toast.makeText(getContext(), "Posições dos controles restauradas para o padrão!", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), "Control positions restored to default!", Toast.LENGTH_SHORT).show();
                 }
             });
         }
@@ -646,7 +646,7 @@ public final class TriAevumConfigDialog extends Dialog {
         if (mBtnExportSave != null) {
             mBtnExportSave.setOnClickListener(v -> {
                 if (!TriAevumSaveManager.hasSaveFiles(getContext())) {
-                    Toast.makeText(getContext(), "Nenhum arquivo de save gravado ainda para exportar.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), "No save file recorded yet to export.", Toast.LENGTH_SHORT).show();
                     return;
                 }
                 if (mActivity instanceof TriAevumActivity) {
@@ -660,9 +660,9 @@ public final class TriAevumConfigDialog extends Dialog {
         if (mBtnImportSave != null) {
             mBtnImportSave.setOnClickListener(v -> {
                 new android.app.AlertDialog.Builder(getContext(), android.R.style.Theme_DeviceDefault_Dialog_Alert)
-                    .setTitle("Importar Save")
-                    .setMessage("Importar um novo save atualizará os arquivos de progresso atuais na pasta de salvamento.\n\nDeseja continuar e selecionar o arquivo (.zip / save)?")
-                    .setPositiveButton("Selecionar Arquivo", (dialog, which) -> {
+                    .setTitle("Import Save")
+                    .setMessage("Importing a new save will overwrite the current progress files in the save folder.\n\nDo you want to continue and select the file (.zip / save)?")
+                    .setPositiveButton("Select File", (dialog, which) -> {
                         if (mActivity instanceof TriAevumActivity) {
                             ((TriAevumActivity) mActivity).startImportSaveFlow(() -> {
                                 refreshSaveStatus();
@@ -692,7 +692,7 @@ public final class TriAevumConfigDialog extends Dialog {
                 mConfig.setCustomTexturesPath("");
                 TriAevumConfigManager.nativeReloadGraphicsSettings();
                 updateTextureDirectoryDisplay();
-                Toast.makeText(getContext(), "Diretório de texturas redefinido para a pasta padrão do aplicativo!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), "Texture directory reset to the app default folder!", Toast.LENGTH_SHORT).show();
             });
         }
 
@@ -714,16 +714,16 @@ public final class TriAevumConfigDialog extends Dialog {
             mBtnDeleteDriver.setOnClickListener(v -> {
                 int pos = mSpGpuDriver.getSelectedItemPosition();
                 if (pos <= 0 || pos > mInstalledDrivers.size()) {
-                    Toast.makeText(getContext(), "O driver padrão do sistema não pode ser excluído.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), "The default system driver cannot be deleted.", Toast.LENGTH_SHORT).show();
                     return;
                 }
                 TriAevumCustomDriverManager.CustomDriverInfo toDelete = mInstalledDrivers.get(pos - 1);
                 new android.app.AlertDialog.Builder(getContext())
-                    .setTitle("Excluir Driver")
-                    .setMessage("Deseja realmente excluir o driver \"" + toDelete.name + "\"?")
+                    .setTitle("Delete Driver")
+                    .setMessage("Do you really want to delete the driver \"" + toDelete.name + "\"?")
                     .setPositiveButton("Sim", (dialog, which) -> {
                         mCustomDriverManager.deleteDriver(toDelete.id);
-                        Toast.makeText(getContext(), "Driver excluído.", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getContext(), "Driver deleted.", Toast.LENGTH_SHORT).show();
                         loadGpuDriversList();
                     })
                     .setNegativeButton("Cancelar", null)
@@ -736,7 +736,7 @@ public final class TriAevumConfigDialog extends Dialog {
         if (mSpGpuDriver == null || mCustomDriverManager == null) return;
         mInstalledDrivers = mCustomDriverManager.getInstalledDrivers();
         java.util.List<String> labels = new java.util.ArrayList<>();
-        labels.add("📱 Padrão do Sistema (Qualcomm)");
+        labels.add("📱 System Default (Qualcomm)");
         int selectedIndex = 0;
         String currentSelectedId = mCustomDriverManager.getSelectedDriverId();
 
@@ -757,10 +757,10 @@ public final class TriAevumConfigDialog extends Dialog {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 if (position == 0) {
-                    mTvDriverInfo.setText("📱 Driver do Sistema: Qualcomm Adreno Stock padrão.");
+                    mTvDriverInfo.setText("📱 System Driver: default Qualcomm Adreno stock.");
                 } else if (position - 1 < mInstalledDrivers.size()) {
                     TriAevumCustomDriverManager.CustomDriverInfo d = mInstalledDrivers.get(position - 1);
-                    mTvDriverInfo.setText("⚡ " + d.name + "\nAutor: " + d.author + " | Versão: " + d.driverVersion + "\nArquivo: " + d.libraryName);
+                    mTvDriverInfo.setText("⚡ " + d.name + "\nAuthor: " + d.author + " | Version: " + d.driverVersion + "\nFile: " + d.libraryName);
                 }
             }
             @Override
@@ -778,13 +778,13 @@ public final class TriAevumConfigDialog extends Dialog {
         }
 
         if (!dir.exists() || !dir.isDirectory()) {
-            Toast.makeText(getContext(), "Pasta de texturas não encontrada: " + dir.getAbsolutePath(), Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), "Texture folder not found: " + dir.getAbsolutePath(), Toast.LENGTH_SHORT).show();
             return;
         }
 
         android.app.ProgressDialog progress = new android.app.ProgressDialog(getContext(), android.R.style.Theme_DeviceDefault_Dialog_Alert);
-        progress.setTitle("⚡ Pré-carregando Texturas");
-        progress.setMessage("Indexando e carregando texturas na memória...");
+        progress.setTitle("⚡ Preloading Textures");
+        progress.setMessage("Indexing and loading textures into memory...");
         progress.setProgressStyle(android.app.ProgressDialog.STYLE_HORIZONTAL);
         progress.setMax(100);
         progress.setCancelable(false);
@@ -796,19 +796,19 @@ public final class TriAevumConfigDialog extends Dialog {
                     int percent = total > 0 ? (int)((current * 100L) / total) : 0;
                     new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
                         progress.setProgress(percent);
-                        progress.setMessage(String.format(java.util.Locale.getDefault(), "%d / %d texturas (%d%%)", current, total, percent));
+                        progress.setMessage(String.format(java.util.Locale.getDefault(), "%d / %d textures (%d%%)", current, total, percent));
                     });
                 });
 
                 new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
                     progress.dismiss();
-                    Toast.makeText(getContext(), "✅ " + loaded + " texturas pré-carregadas na memória com sucesso!", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getContext(), "✅ " + loaded + " textures preloaded into memory successfully!", Toast.LENGTH_LONG).show();
                     updateTextureDirectoryDisplay();
                 });
             } catch (Throwable t) {
                 new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
                     progress.dismiss();
-                    Toast.makeText(getContext(), "Erro ao pré-carregar: " + t.getMessage(), Toast.LENGTH_LONG).show();
+                    Toast.makeText(getContext(), "Error preloading: " + t.getMessage(), Toast.LENGTH_LONG).show();
                 });
             }
         }).start();
@@ -819,16 +819,16 @@ public final class TriAevumConfigDialog extends Dialog {
         String path = mConfig.getCustomTexturesPath();
         if (path == null || path.trim().isEmpty()) {
             java.io.File defaultDir = TriAevumTextureManager.getDefaultTexturesDir(getContext());
-            mTvCustomTexturesPath.setText("Diretório: Padrão (" + defaultDir.getAbsolutePath() + ")");
-            mTvCustomTexturesCount.setText("Verificando texturas...");
+            mTvCustomTexturesPath.setText("Directory: Default (" + defaultDir.getAbsolutePath() + ")");
+            mTvCustomTexturesCount.setText("Checking textures...");
             TriAevumTextureManager.countTexturesAsync(defaultDir.getAbsolutePath(), (count, summary) -> {
                 if (mTvCustomTexturesCount != null) {
                     mTvCustomTexturesCount.setText(summary);
                 }
             });
         } else {
-            mTvCustomTexturesPath.setText("Diretório: " + path);
-            mTvCustomTexturesCount.setText("Verificando texturas...");
+            mTvCustomTexturesPath.setText("Directory: " + path);
+            mTvCustomTexturesCount.setText("Checking textures...");
             TriAevumTextureManager.countTexturesAsync(path, (count, summary) -> {
                 if (mTvCustomTexturesCount != null) {
                     mTvCustomTexturesCount.setText(summary);
@@ -986,7 +986,7 @@ public final class TriAevumConfigDialog extends Dialog {
             }
             if (!prevDriver.equals(newDriver)) {
                 mCustomDriverManager.setSelectedDriverId(newDriver);
-                Toast.makeText(getContext(), "Driver GPU alterado! Reinicie o jogo para aplicar o novo driver.", Toast.LENGTH_LONG).show();
+                Toast.makeText(getContext(), "GPU driver changed! Restart the game to apply the new driver.", Toast.LENGTH_LONG).show();
             }
         }
         Log.d(TAG, "--- saveToConfig END ---");

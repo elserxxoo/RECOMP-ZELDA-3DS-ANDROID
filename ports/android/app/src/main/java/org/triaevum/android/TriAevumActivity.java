@@ -379,14 +379,14 @@ public final class TriAevumActivity extends Activity {
         contentLp.rightMargin = 80;
 
         TextView title = new TextView(this);
-        title.setText("TRIAEVUM 3D");
+        title.setText("THOROFTIME 3D");
         title.setTextColor(0xFFFFD700);
         title.setTextSize(22);
         title.setTypeface(Typeface.DEFAULT_BOLD);
         title.setGravity(Gravity.CENTER);
 
         TextView subtitle = new TextView(this);
-        subtitle.setText("⚡ Pré-carregando texturas personalizadas...");
+        subtitle.setText("⚡ Preloading custom textures...");
         subtitle.setTextColor(0xFFECEFF4);
         subtitle.setTextSize(14);
         subtitle.setGravity(Gravity.CENTER);
@@ -401,14 +401,14 @@ public final class TriAevumActivity extends Activity {
         progressBar.setLayoutParams(pbLp);
 
         TextView tvDetails = new TextView(this);
-        tvDetails.setText("Indexando texturas...");
+        tvDetails.setText("Indexing textures...");
         tvDetails.setTextColor(0xFF90A4AE);
         tvDetails.setTextSize(12);
         tvDetails.setGravity(Gravity.CENTER);
         tvDetails.setPadding(0, 10, 0, 16);
 
         Button btnSkip = new Button(this);
-        btnSkip.setText("Pular e Iniciar");
+        btnSkip.setText("Skip and Start");
         btnSkip.setTextColor(0xFFCFD8DC);
         btnSkip.setTextSize(12);
         btnSkip.setBackgroundColor(0x33FFFFFF);
@@ -452,7 +452,7 @@ public final class TriAevumActivity extends Activity {
                         if (total > 0) {
                             int pct = (int)((loaded * 100L) / total);
                             progressBar.setProgress(pct);
-                            tvDetails.setText(String.format(Locale.getDefault(), "%d / %d texturas (%d%%)", loaded, total, pct));
+                            tvDetails.setText(String.format(Locale.getDefault(), "%d / %d textures (%d%%)", loaded, total, pct));
                         }
                     });
                 });
@@ -786,7 +786,7 @@ public final class TriAevumActivity extends Activity {
         File root = getExternalFilesDir(null);
         if (root != null) {
             exportHudLayoutFromXml(root);
-            android.widget.Toast.makeText(this, "Layout do HUD restaurado para o padrão!", android.widget.Toast.LENGTH_SHORT).show();
+            android.widget.Toast.makeText(this, "HUD layout restored to default!", android.widget.Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -815,14 +815,14 @@ public final class TriAevumActivity extends Activity {
         titleBox.setLayoutParams(titleLp);
 
         TextView title = new TextView(this);
-        title.setText("🎮 Editor de Controles Virtuais");
+        title.setText("🎮 Virtual Controls Editor");
         title.setTextColor(Color.parseColor("#FFC107"));
         title.setTextSize(13);
         title.setTypeface(null, android.graphics.Typeface.BOLD);
         titleBox.addView(title);
 
         TextView sub = new TextView(this);
-        sub.setText("Toque e arraste os botões para onde quiser na tela");
+        sub.setText("Touch and drag the buttons anywhere on the screen");
         sub.setTextColor(Color.parseColor("#8B9BB4"));
         sub.setTextSize(10);
         titleBox.addView(sub);
@@ -833,7 +833,7 @@ public final class TriAevumActivity extends Activity {
 
         // Botão Restaurar Padrão
         Button btnReset = new Button(this);
-        btnReset.setText("↺ Padrão");
+        btnReset.setText("↺ Default");
         btnReset.setTextColor(Color.WHITE);
         btnReset.setTextSize(11);
         btnReset.setBackgroundResource(R.drawable.btn_dark);
@@ -844,7 +844,7 @@ public final class TriAevumActivity extends Activity {
         btnReset.setPadding(padH, 0, padH, 0);
         btnReset.setOnClickListener(v -> {
             mWindroidOverlay.resetControlPositions();
-            android.widget.Toast.makeText(this, "Posições dos controles restauradas para o padrão!", android.widget.Toast.LENGTH_SHORT).show();
+            android.widget.Toast.makeText(this, "Control positions restored to default!", android.widget.Toast.LENGTH_SHORT).show();
         });
         bar.addView(btnReset);
 
@@ -867,7 +867,7 @@ public final class TriAevumActivity extends Activity {
 
         // Botão Salvar
         Button btnSave = new Button(this);
-        btnSave.setText("💾 Salvar");
+        btnSave.setText("💾 Save");
         btnSave.setTextColor(Color.parseColor("#1A1500"));
         btnSave.setTextSize(11);
         btnSave.setTypeface(null, android.graphics.Typeface.BOLD);
@@ -879,7 +879,7 @@ public final class TriAevumActivity extends Activity {
         btnSave.setOnClickListener(v -> {
             mWindroidOverlay.saveControlPositions();
             mLayout.removeView(bar);
-            android.widget.Toast.makeText(this, "Posições dos controles salvas com sucesso!", android.widget.Toast.LENGTH_SHORT).show();
+            android.widget.Toast.makeText(this, "Control positions saved successfully!", android.widget.Toast.LENGTH_SHORT).show();
         });
         bar.addView(btnSave);
 
@@ -926,7 +926,7 @@ public final class TriAevumActivity extends Activity {
             startActivityForResult(intent, REQUEST_CODE_INSTALL_DRIVER);
         } catch (Exception e) {
             Log.e(TAG, "Falha ao iniciar seletor de driver", e);
-            android.widget.Toast.makeText(this, "Erro ao abrir seletor de arquivos: " + e.getMessage(), android.widget.Toast.LENGTH_LONG).show();
+            android.widget.Toast.makeText(this, "Error opening file picker: " + e.getMessage(), android.widget.Toast.LENGTH_LONG).show();
         }
     }
 
@@ -947,7 +947,7 @@ public final class TriAevumActivity extends Activity {
             startActivityForResult(intent, REQUEST_CODE_SELECT_TEXTURE_DIR);
         } catch (Exception e) {
             Log.e(TAG, "Falha ao iniciar seletor de diretório de texturas", e);
-            android.widget.Toast.makeText(this, "Erro ao abrir seletor de pasta: " + e.getMessage(), android.widget.Toast.LENGTH_LONG).show();
+            android.widget.Toast.makeText(this, "Error opening folder picker: " + e.getMessage(), android.widget.Toast.LENGTH_LONG).show();
         }
     }
 
@@ -962,7 +962,7 @@ public final class TriAevumActivity extends Activity {
             startActivityForResult(intent, REQUEST_CODE_EXPORT_SAVE);
         } catch (Exception e) {
             Log.e(TAG, "Falha ao iniciar seletor de exportação de save", e);
-            android.widget.Toast.makeText(this, "Erro ao abrir seletor de arquivo: " + e.getMessage(), android.widget.Toast.LENGTH_LONG).show();
+            android.widget.Toast.makeText(this, "Error opening file picker: " + e.getMessage(), android.widget.Toast.LENGTH_LONG).show();
         }
     }
 
@@ -981,7 +981,7 @@ public final class TriAevumActivity extends Activity {
             startActivityForResult(intent, REQUEST_CODE_IMPORT_SAVE);
         } catch (Exception e) {
             Log.e(TAG, "Falha ao iniciar seletor de importação de save", e);
-            android.widget.Toast.makeText(this, "Erro ao abrir seletor de arquivo: " + e.getMessage(), android.widget.Toast.LENGTH_LONG).show();
+            android.widget.Toast.makeText(this, "Error opening file picker: " + e.getMessage(), android.widget.Toast.LENGTH_LONG).show();
         }
     }
 
@@ -1015,7 +1015,7 @@ public final class TriAevumActivity extends Activity {
 
         Uri uri = data.getData();
         if (requestCode == REQUEST_CODE_EXPORT_SAVE) {
-            android.widget.Toast.makeText(this, "Exportando save...", android.widget.Toast.LENGTH_SHORT).show();
+            android.widget.Toast.makeText(this, "Exporting save...", android.widget.Toast.LENGTH_SHORT).show();
             TriAevumSaveManager.exportSaveToUri(this, uri, new TriAevumSaveManager.SaveCallback<String>() {
                 @Override
                 public void onSuccess(String result) {
@@ -1027,15 +1027,15 @@ public final class TriAevumActivity extends Activity {
 
                 @Override
                 public void onError(Exception error) {
-                    android.widget.Toast.makeText(TriAevumActivity.this, "❌ Erro ao exportar save: " + error.getMessage(), android.widget.Toast.LENGTH_LONG).show();
+                    android.widget.Toast.makeText(TriAevumActivity.this, "❌ Error exporting save: " + error.getMessage(), android.widget.Toast.LENGTH_LONG).show();
                 }
             });
         } else if (requestCode == REQUEST_CODE_IMPORT_SAVE) {
-            android.widget.Toast.makeText(this, "Importando save...", android.widget.Toast.LENGTH_SHORT).show();
+            android.widget.Toast.makeText(this, "Importing save...", android.widget.Toast.LENGTH_SHORT).show();
             TriAevumSaveManager.importSaveFromUri(this, uri, new TriAevumSaveManager.SaveCallback<Integer>() {
                 @Override
                 public void onSuccess(Integer count) {
-                    android.widget.Toast.makeText(TriAevumActivity.this, "✅ Save importado com sucesso (" + count + " arquivos)!", android.widget.Toast.LENGTH_LONG).show();
+                    android.widget.Toast.makeText(TriAevumActivity.this, "✅ Save imported successfully (" + count + " files)!", android.widget.Toast.LENGTH_LONG).show();
                     if (mSaveActionListener != null) {
                         mSaveActionListener.onSaveOperationCompleted();
                     }
@@ -1043,7 +1043,7 @@ public final class TriAevumActivity extends Activity {
 
                 @Override
                 public void onError(Exception error) {
-                    android.widget.Toast.makeText(TriAevumActivity.this, "❌ Erro ao importar save: " + error.getMessage(), android.widget.Toast.LENGTH_LONG).show();
+                    android.widget.Toast.makeText(TriAevumActivity.this, "❌ Error importing save: " + error.getMessage(), android.widget.Toast.LENGTH_LONG).show();
                 }
             });
         } else if (requestCode == REQUEST_CODE_SELECT_TEXTURE_DIR) {
@@ -1057,15 +1057,15 @@ public final class TriAevumActivity extends Activity {
                 config.setCustomTexturesPath(resolvedPath);
                 config.setCustomTexturesEnabled(true);
                 TriAevumConfigManager.nativeReloadGraphicsSettings();
-                android.widget.Toast.makeText(this, "✅ Pasta de texturas selecionada:\n" + resolvedPath, android.widget.Toast.LENGTH_LONG).show();
+                android.widget.Toast.makeText(this, "✅ Texture folder selected:\n" + resolvedPath, android.widget.Toast.LENGTH_LONG).show();
                 if (mTextureDirSelectedListener != null) {
                     mTextureDirSelectedListener.onTextureDirSelected(resolvedPath);
                 }
             } else {
-                android.widget.Toast.makeText(this, "⚠️ Não foi possível resolver o caminho do diretório selecionado.", android.widget.Toast.LENGTH_LONG).show();
+                android.widget.Toast.makeText(this, "⚠️ Could not resolve the path of the selected directory.", android.widget.Toast.LENGTH_LONG).show();
             }
         } else if (requestCode == REQUEST_CODE_INSTALL_DRIVER) {
-            android.widget.Toast.makeText(this, "Instalando driver Turnip...", android.widget.Toast.LENGTH_SHORT).show();
+            android.widget.Toast.makeText(this, "Installing Turnip driver...", android.widget.Toast.LENGTH_SHORT).show();
             new Thread(() -> {
                 try {
                     String fileName = "turnip_driver.zip";
@@ -1088,7 +1088,7 @@ public final class TriAevumActivity extends Activity {
 
                     runOnUiThread(() -> {
                         android.widget.Toast.makeText(TriAevumActivity.this,
-                                "✅ Driver instalado: " + installed.name + "\nReinicie o jogo para aplicar.",
+                                "✅ Driver installed: " + installed.name + "\nRestart the game to apply.",
                                 android.widget.Toast.LENGTH_LONG).show();
                         if (mDriverInstallListener != null) {
                             mDriverInstallListener.onDriverInstalled(installed);
@@ -1098,7 +1098,7 @@ public final class TriAevumActivity extends Activity {
                     Log.e(TAG, "Erro ao instalar driver Turnip", e);
                     runOnUiThread(() -> {
                         android.widget.Toast.makeText(TriAevumActivity.this,
-                                "❌ Erro ao instalar driver: " + e.getMessage(),
+                                "❌ Error installing driver: " + e.getMessage(),
                                 android.widget.Toast.LENGTH_LONG).show();
                     });
                 }

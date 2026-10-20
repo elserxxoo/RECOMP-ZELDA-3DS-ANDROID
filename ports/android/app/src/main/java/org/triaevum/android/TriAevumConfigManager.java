@@ -33,11 +33,11 @@ public final class TriAevumConfigManager {
     // ------- oot3d_native_game.json ---
     public static final String[] RENDER_SCALE_LABELS = {
         "0.25x (~240p Original 3DS)",
-        "0.33x (~360p Retrô)",
-        "0.5x (~540p Econômico)",
-        "0.75x (~720p Equilibrado)",
-        "1.0x (Nativo do Display)",
-        "1.5x (Alta Definição)",
+        "0.33x (~360p Retro)",
+        "0.5x (~540p Economy)",
+        "0.75x (~720p Balanced)",
+        "1.0x (Native Display)",
+        "1.5x (High Definition)",
         "2.0x (Ultra / Supersampling)"
     };
     public static final float[]  RENDER_SCALE_VALUES = {
@@ -50,15 +50,15 @@ public final class TriAevumConfigManager {
         2.0f
     };
 
-    public static final String[] AA_MODE_LABELS   = { "Desligado", "FXAA", "TAA", "MSAA 2x", "MSAA 4x" };
+    public static final String[] AA_MODE_LABELS   = { "Off", "FXAA", "TAA", "MSAA 2x", "MSAA 4x" };
     public static final String[] AA_MODE_VALUES   = { "Off",       "FXAA", "TAA", "MSAA2x",  "MSAA4x"  };
 
     public static final String[] FRAMERATE_LABELS = {
         "30 FPS (Original 3DS)",
-        "60 FPS (Nativo / 2x)",
-        "90 FPS (Fluido / 3x)",
-        "120 FPS (Ultra Fluido / 4x)",
-        "Sem Limite (Uncapped)"
+        "60 FPS (Native / 2x)",
+        "90 FPS (Smooth / 3x)",
+        "120 FPS (Ultra Smooth / 4x)",
+        "Unlimited (Uncapped)"
     };
     public static final String[] FRAMERATE_VALUES = {
         "Original30",
@@ -69,16 +69,16 @@ public final class TriAevumConfigManager {
     };
 
     // ------- oot3d_native_game.json (Visual Mods) ---
-    public static final String[] GRASS_QUALITY_LABELS = { "Desligada", "Baixa", "Média", "Alta" };
+    public static final String[] GRASS_QUALITY_LABELS = { "Off", "Low", "Medium", "High" };
     public static final String[] GRASS_QUALITY_VALUES = { "Off",       "Low",   "Medium", "High" };
 
     // ------- TriAevum.android.host.json ---
     public static final String[] SURFACE_RES_LABELS = {
-        "480p (Super Leve / Bateria)",
-        "540p (Econômico)",
-        "720p (Equilibrado / Padrão)",
-        "1080p (Alta Resolução)",
-        "Nativo da Tela (Sem Limite)"
+        "480p (Ultra Light / Battery)",
+        "540p (Economy)",
+        "720p (Balanced / Default)",
+        "1080p (High Resolution)",
+        "Native Screen (No Limit)"
     };
     public static final int[]    SURFACE_RES_VALUES = {
         480,
@@ -89,7 +89,7 @@ public final class TriAevumConfigManager {
     };
 
     // ------- topscreen_ui.json ---
-    public static final String[] HUD_LAYOUT_LABELS  = { "Normal (Padrão)", "Restoration (MM3D)" };
+    public static final String[] HUD_LAYOUT_LABELS  = { "Normal (Default)", "Restoration (MM3D)" };
     public static final String[] HUD_LAYOUT_VALUES  = { "normal",          "restoration"        };
 
     // -------------------------------------------------------------------------

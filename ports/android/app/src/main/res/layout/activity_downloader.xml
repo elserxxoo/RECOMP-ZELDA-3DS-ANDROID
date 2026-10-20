@@ -52,7 +52,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:text="Selecione o diretório onde estão os arquivos da ROM para começar"
+            android:text="Select the folder containing the ROM files to get started"
             android:textColor="#C8D8E8"
             android:textSize="13sp" />
 
@@ -93,7 +93,7 @@
                 android:id="@+id/tv_download_details"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Conectando..."
+                android:text="Connecting..."
                 android:textColor="#8B9BB4"
                 android:textSize="12sp" />
         </LinearLayout>
@@ -105,7 +105,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="14dp"
             android:gravity="center"
-            android:text="✦ TOQUE NA TELA PARA INICIAR ✦"
+            android:text="✦ TAP THE SCREEN TO START ✦"
             android:textColor="#FFD700"
             android:textSize="18sp"
             android:textStyle="bold"
@@ -125,7 +125,7 @@
                 android:background="@drawable/btn_gold"
                 android:paddingStart="20dp"
                 android:paddingEnd="20dp"
-                android:text="Trocar Pasta"
+                android:text="Change Folder"
                 android:textAllCaps="false"
                 android:textColor="#0B0E14"
                 android:textSize="13sp"
@@ -140,7 +140,7 @@
             android:background="@drawable/btn_gold"
             android:paddingStart="24dp"
             android:paddingEnd="24dp"
-            android:text="Selecionar Pasta da ROM"
+            android:text="Select ROM Folder"
             android:textAllCaps="false"
             android:textColor="#0B0E14"
             android:textSize="13sp"
