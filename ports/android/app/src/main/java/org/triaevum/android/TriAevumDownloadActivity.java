@@ -99,6 +99,16 @@ public class TriAevumDownloadActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        // Game already set up: go straight into the game and skip this screen.
+        // (The ROM folder picker only shows up when the game is not installed yet.)
+        if (isGameInstalled(this)) {
+            Intent gameIntent = new Intent(this, TriAevumActivity.class);
+            gameIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(gameIntent);
+            finish();
+            return;
+        }
+
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             getWindow().getAttributes().layoutInDisplayCutoutMode =

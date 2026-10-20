@@ -169,6 +169,12 @@ NativeA32TouchMapping MapHostPointerToNativeA32Touch(
     NativeA32TouchPresentation presentation =
         NativeA32TouchPresentation::NativeLowerScreen320x240) noexcept;
 
+// Maps a pointer on a surface that shows the 320x240 bottom screen stretched to
+// fill the whole surface (no letterboxing), e.g. the Android secondary display.
+NativeA32TouchMapping MapHostPointerToNativeA32TouchStretched(
+    int32_t pointerX, int32_t pointerY, uint32_t hostWidth,
+    uint32_t hostHeight, bool pointerPressed) noexcept;
+
 struct NativeA32InputDiagnostics {
     uint32_t SampledFrameCount = 0;
     uint32_t ScriptedFrameCount = 0;

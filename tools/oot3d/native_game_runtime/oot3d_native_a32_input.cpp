@@ -362,6 +362,24 @@ NativeA32TouchMapping MapHostPointerToNativeA32Touch(
         logical.Inside, pointerPressed);
 }
 
+NativeA32TouchMapping MapHostPointerToNativeA32TouchStretched(
+    int32_t pointerX, int32_t pointerY, uint32_t hostWidth,
+    uint32_t hostHeight, bool pointerPressed) noexcept {
+    if (hostWidth == 0U || hostHeight == 0U) {
+        return NativeA32TouchMapping{};
+    }
+    const float width = static_cast<float>(NativeA32TouchWidth);
+    const float height = static_cast<float>(NativeA32TouchHeight);
+    const float logicalX = static_cast<float>(pointerX) /
+                           static_cast<float>(hostWidth) * width;
+    const float logicalY = static_cast<float>(pointerY) /
+                           static_cast<float>(hostHeight) * height;
+    const bool inside = logicalX >= 0.0F && logicalX < width &&
+                        logicalY >= 0.0F && logicalY < height;
+    return ThreeDsRecomp::Input::MapPresentationPointToTouch(
+        logicalX, logicalY, width, height, inside, pointerPressed);
+}
+
 NativeA32TouchMapping MapTopScreenPageShortcutToNativeTouch(
     NativeA32TopScreenPage page) noexcept {
     NativeA32TouchMapping mapped;
