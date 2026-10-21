@@ -512,8 +512,11 @@ void GfxRenderingAPIVulkan::RunSecondaryPresentAfterSubmit() noexcept {
         }
         vkUpdateDescriptorSets(mDevice, static_cast<uint32_t>(writes.size()), writes.data(), 0, nullptr);
 
-        // The bottom screen is stretched to fill the whole secondary display
-        // (no letterboxing). The scanout shader rotates the physical framebuffer.
+        // Display images hold the guest framebuffer in physical (rotated) layout;
+        // the scanout shader rotates it, so the logical size is (Height x Width).
+        const auto rect = FitNativePicaPresentation(mSecondary.Extent.width, mSecondary.Extent.height,
+                                                    static_cast<float>(display.Height),
+                                                    static_cast<float>(display.Width));
         Oot3d::PicaScanoutPolicyInput policy;
         policy.TransferFlags = mSecondary.PendingFlags;
         policy.Width = display.Width;
@@ -545,8 +548,7 @@ void GfxRenderingAPIVulkan::RunSecondaryPresentAfterSubmit() noexcept {
         passBegin.clearValueCount = 1;
         passBegin.pClearValues = &clear;
         vkCmdBeginRenderPass(cmd, &passBegin, VK_SUBPASS_CONTENTS_INLINE);
-        const VkViewport viewport{0.0F, 0.0F, static_cast<float>(mSecondary.Extent.width),
-                                  static_cast<float>(mSecondary.Extent.height), 0.0F, 1.0F};
+        const VkViewport viewport{rect.X, rect.Y, rect.Width, rect.Height, 0.0F, 1.0F};
         const VkRect2D scissor{{0, 0}, mSecondary.Extent};
         vkCmdSetViewport(cmd, 0, 1, &viewport);
         vkCmdSetScissor(cmd, 0, 1, &scissor);

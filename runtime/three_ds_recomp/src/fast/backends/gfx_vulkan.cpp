@@ -42,6 +42,8 @@
 #include <cstdlib>
 #include <cstring>
 #include <filesystem>
+#include <functional>
+#include <memory>
 #include <fstream>
 #include <limits>
 #include <sstream>
@@ -1071,6 +1073,9 @@ void GfxRenderingAPIVulkan::Shutdown() {
         StopPresentWorker();
         vkDeviceWaitIdle(mDevice);
         DestroySecondaryPresenter();
+        if (mPipelineCacheWriter.joinable()) {
+            mPipelineCacheWriter.join();
+        }
         StorePipelineCache();
         ShutdownImGuiBackend();
         mSceneSurfaces.Clear();
@@ -1995,14 +2000,37 @@ void GfxRenderingAPIVulkan::FinishRender() {
     mFrameSubmitted = false;
     mCurrentFrame = (mCurrentFrame + 1) % kFramesInFlight;
 
+#if defined(__ANDROID__)
+    {
+        // Hitch telemetry: log frames that took much longer than a 60 Hz frame and
+        // what the render thread spent time on since the previous frame.
+        const auto perfNow = std::chrono::steady_clock::now();
+        const uint64_t creationNs = mNriPicaPipelineBridge.PipelineStatistics().CreationNanoseconds;
+        if (mPerfLastFrame.time_since_epoch().count() != 0) {
+            const double intervalMs = std::chrono::duration<double, std::milli>(perfNow - mPerfLastFrame).count();
+            if (intervalMs > 34.0) {
+                __android_log_print(ANDROID_LOG_INFO, "TriAevum",
+                                    "PERF hitch: frame interval %.1f ms | shader compile %.1f ms | "
+                                    "pipeline creation %.1f ms | cache save %.1f ms",
+                                    intervalMs, mPerfCompileMs,
+                                    static_cast<double>(creationNs - mPerfLastCreationNs) / 1.0e6, mPerfSaveMs);
+            }
+        }
+        mPerfLastFrame = perfNow;
+        mPerfLastCreationNs = creationNs;
+        mPerfCompileMs = 0.0;
+        mPerfSaveMs = 0.0;
+    }
+#endif
+
     const uint32_t newPipelines = mNewPipelinesSinceLastSave.load(std::memory_order_relaxed);
     if (newPipelines > 0) {
         const auto now = std::chrono::steady_clock::now();
         const auto elapsedSeconds = std::chrono::duration_cast<std::chrono::seconds>(now - mLastPipelineCacheSave).count();
-        if (newPipelines >= 8 || elapsedSeconds >= 20) {
+        if (newPipelines >= 16 || elapsedSeconds >= 30) {
             mNewPipelinesSinceLastSave.store(0, std::memory_order_relaxed);
             mLastPipelineCacheSave = now;
-            StorePipelineCache();
+            StorePipelineCache(true);
         }
     }
 }
@@ -2741,74 +2769,112 @@ void GfxRenderingAPIVulkan::CreatePipelineCache() {
 #endif
 }
 
-void GfxRenderingAPIVulkan::StorePipelineCache() {
-    std::lock_guard lock(mPipelineCacheMutex);
-    const auto statistics = mNriPicaPipelineBridge.PipelineStatistics();
-    mDiagnostics.SetNriPipelineStatistics(statistics.InitialCacheBytes, statistics.CreationAttempts, statistics.Created,
-                                          statistics.CreationNanoseconds);
-    mDiagnostics.Flush();
-    const auto receipt = nlohmann::json({ { "initial_cache_bytes", statistics.InitialCacheBytes },
-                                          { "creation_attempts", statistics.CreationAttempts },
-                                          { "created", statistics.Created },
-                                          { "creation_nanoseconds", statistics.CreationNanoseconds } })
-                             .dump();
-    // Release/mobile hosts may suppress INFO and have no per-frame diagnostics enabled.
-    std::fprintf(stderr, "TRIAEVUM_NRI_PIPELINE_CACHE %s\n", receipt.c_str());
-    const auto nriData = mNriPicaPipelineBridge.GetPipelineCacheData();
-    if (!nriData.empty()) {
-        VkPhysicalDeviceProperties properties{};
-        vkGetPhysicalDeviceProperties(mPhysicalDevice, &properties);
-        std::string error;
-        if (StorePipelineCacheData(VulkanPipelineCachePath(true), MakePipelineCacheHeader(properties), nriData, &error)) {
-            SPDLOG_INFO("NRI PICA pipeline cache: stored {} bytes", nriData.size());
+void GfxRenderingAPIVulkan::StorePipelineCache(bool background) {
+    // A previous background write is still running: keep the request pending.
+    if (background && mPipelineCacheWriteInFlight.load(std::memory_order_acquire)) {
+        mNewPipelinesSinceLastSave.fetch_add(1, std::memory_order_relaxed);
+        return;
+    }
+    const auto perfStart = std::chrono::steady_clock::now();
+    std::vector<std::function<void()>> writeJobs;
+    {
+        // Only the data collection holds the mutex; file I/O happens after it is released.
+        std::lock_guard lock(mPipelineCacheMutex);
+        const auto statistics = mNriPicaPipelineBridge.PipelineStatistics();
+        mDiagnostics.SetNriPipelineStatistics(statistics.InitialCacheBytes, statistics.CreationAttempts,
+                                              statistics.Created, statistics.CreationNanoseconds);
+        mDiagnostics.Flush();
+        const auto receipt = nlohmann::json({ { "initial_cache_bytes", statistics.InitialCacheBytes },
+                                              { "creation_attempts", statistics.CreationAttempts },
+                                              { "created", statistics.Created },
+                                              { "creation_nanoseconds", statistics.CreationNanoseconds } })
+                                 .dump();
+        // Release/mobile hosts may suppress INFO and have no per-frame diagnostics enabled.
+        std::fprintf(stderr, "TRIAEVUM_NRI_PIPELINE_CACHE %s\n", receipt.c_str());
+        auto nriData = mNriPicaPipelineBridge.GetPipelineCacheData();
+        if (!nriData.empty()) {
+            VkPhysicalDeviceProperties properties{};
+            vkGetPhysicalDeviceProperties(mPhysicalDevice, &properties);
+            auto nriShared = std::make_shared<std::vector<uint8_t>>(std::move(nriData));
+            writeJobs.emplace_back([path = VulkanPipelineCachePath(true), header = MakePipelineCacheHeader(properties),
+                                    nriShared]() {
+                std::string error;
+                if (StorePipelineCacheData(path, header, *nriShared, &error)) {
+                    SPDLOG_INFO("NRI PICA pipeline cache: stored {} bytes", nriShared->size());
 #if defined(__ANDROID__)
-            __android_log_print(ANDROID_LOG_INFO, "TriAevum", "NRI PICA pipeline cache: stored %zu bytes", nriData.size());
+                    __android_log_print(ANDROID_LOG_INFO, "TriAevum", "NRI PICA pipeline cache: stored %zu bytes",
+                                        nriShared->size());
 #endif
-        } else {
-            SPDLOG_WARN("NRI PICA pipeline cache: {}", error);
+                } else {
+                    SPDLOG_WARN("NRI PICA pipeline cache: {}", error);
 #if defined(__ANDROID__)
-            __android_log_print(ANDROID_LOG_WARN, "TriAevum", "NRI PICA pipeline cache store warning: %s", error.c_str());
+                    __android_log_print(ANDROID_LOG_WARN, "TriAevum", "NRI PICA pipeline cache store warning: %s",
+                                        error.c_str());
 #endif
+                }
+            });
+        }
+        if (mPipelineCache != VK_NULL_HANDLE) {
+            size_t dataSize = 0;
+            VkResult result = vkGetPipelineCacheData(mDevice, mPipelineCache, &dataSize, nullptr);
+            if (result != VK_SUCCESS || dataSize == 0 || dataSize > kMaximumPipelineCacheBytes) {
+                SPDLOG_WARN("OOT3D Vulkan could not size the pipeline cache (VkResult {}, {} "
+                            "bytes)",
+                            static_cast<int>(result), dataSize);
+            } else {
+                std::vector<uint8_t> data(dataSize);
+                result = vkGetPipelineCacheData(mDevice, mPipelineCache, &dataSize, data.data());
+                if (result != VK_SUCCESS || dataSize == 0 || dataSize > data.size()) {
+                    SPDLOG_WARN("OOT3D Vulkan could not read the pipeline cache (VkResult {}, {} "
+                                "bytes)",
+                                static_cast<int>(result), dataSize);
+                } else {
+                    data.resize(dataSize);
+                    VkPhysicalDeviceProperties properties{};
+                    vkGetPhysicalDeviceProperties(mPhysicalDevice, &properties);
+                    auto vkShared = std::make_shared<std::vector<uint8_t>>(std::move(data));
+                    writeJobs.emplace_back([path = VulkanPipelineCachePath(),
+                                            header = MakePipelineCacheHeader(properties), vkShared]() {
+                        std::string error;
+                        if (StorePipelineCacheData(path, header, *vkShared, &error)) {
+                            SPDLOG_INFO("OOT3D Vulkan pipeline cache: stored {} bytes", vkShared->size());
+#if defined(__ANDROID__)
+                            __android_log_print(ANDROID_LOG_INFO, "TriAevum",
+                                                "OOT3D Vulkan pipeline cache: stored %zu bytes to %s",
+                                                vkShared->size(), path.c_str());
+#endif
+                        } else {
+                            SPDLOG_WARN("OOT3D Vulkan pipeline cache: {}", error);
+#if defined(__ANDROID__)
+                            __android_log_print(ANDROID_LOG_WARN, "TriAevum",
+                                                "OOT3D Vulkan pipeline cache store warning: %s", error.c_str());
+#endif
+                        }
+                    });
+                }
+            }
         }
     }
-    if (mPipelineCache == VK_NULL_HANDLE) {
-        return;
-    }
 
-    size_t dataSize = 0;
-    VkResult result = vkGetPipelineCacheData(mDevice, mPipelineCache, &dataSize, nullptr);
-    if (result != VK_SUCCESS || dataSize == 0 || dataSize > kMaximumPipelineCacheBytes) {
-        SPDLOG_WARN("OOT3D Vulkan could not size the pipeline cache (VkResult {}, {} "
-                    "bytes)",
-                    static_cast<int>(result), dataSize);
-        return;
+    if (!writeJobs.empty()) {
+        if (!background) {
+            for (const auto& job : writeJobs) {
+                job();
+            }
+        } else {
+            if (mPipelineCacheWriter.joinable()) {
+                mPipelineCacheWriter.join();  // previous write already finished
+            }
+            mPipelineCacheWriteInFlight.store(true, std::memory_order_release);
+            mPipelineCacheWriter = std::thread([this, jobs = std::move(writeJobs)]() {
+                for (const auto& job : jobs) {
+                    job();
+                }
+                mPipelineCacheWriteInFlight.store(false, std::memory_order_release);
+            });
+        }
     }
-
-    std::vector<uint8_t> data(dataSize);
-    result = vkGetPipelineCacheData(mDevice, mPipelineCache, &dataSize, data.data());
-    if (result != VK_SUCCESS || dataSize == 0 || dataSize > data.size()) {
-        SPDLOG_WARN("OOT3D Vulkan could not read the pipeline cache (VkResult {}, {} "
-                    "bytes)",
-                    static_cast<int>(result), dataSize);
-        return;
-    }
-    data.resize(dataSize);
-
-    VkPhysicalDeviceProperties properties{};
-    vkGetPhysicalDeviceProperties(mPhysicalDevice, &properties);
-    const std::filesystem::path path = VulkanPipelineCachePath();
-    std::string error;
-    if (StorePipelineCacheData(path, MakePipelineCacheHeader(properties), data, &error)) {
-        SPDLOG_INFO("OOT3D Vulkan pipeline cache: stored {} bytes", data.size());
-#if defined(__ANDROID__)
-        __android_log_print(ANDROID_LOG_INFO, "TriAevum", "OOT3D Vulkan pipeline cache: stored %zu bytes to %s", data.size(), path.c_str());
-#endif
-    } else {
-        SPDLOG_WARN("OOT3D Vulkan pipeline cache: {}", error);
-#if defined(__ANDROID__)
-        __android_log_print(ANDROID_LOG_WARN, "TriAevum", "OOT3D Vulkan pipeline cache store warning: %s", error.c_str());
-#endif
-    }
+    mPerfSaveMs += std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - perfStart).count();
 }
 
 void GfxRenderingAPIVulkan::StartPresentWorker() {
@@ -3568,7 +3634,19 @@ std::vector<uint32_t> GfxRenderingAPIVulkan::ResolveNativePicaShaderSpirv(std::s
                                  std::string(Oot3d::PicaAotShaderStageName(stage)) + " module for " +
                                  Oot3d::FormatPicaAotShaderId(identity.Id));
     }
-    return CompileShaderSpirv(std::string(source), vertexShader, sourceName);
+    const auto compileStart = std::chrono::steady_clock::now();
+    auto spirv = CompileShaderSpirv(std::string(source), vertexShader, sourceName);
+    const double compileMs =
+        std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - compileStart).count();
+    mPerfCompileMs += compileMs;
+#if defined(__ANDROID__)
+    if (compileMs > 3.0) {
+        __android_log_print(ANDROID_LOG_INFO, "TriAevum", "PERF runtime shader compile: %.1f ms (stage=%s, name=%s)",
+                            compileMs, std::string(Oot3d::PicaAotShaderStageName(stage)).c_str(),
+                            sourceName != nullptr ? sourceName : "unnamed");
+    }
+#endif
+    return spirv;
 }
 
 VkShaderModule GfxRenderingAPIVulkan::CreateShaderModuleFromSpirv(std::span<const uint32_t> spirv) {

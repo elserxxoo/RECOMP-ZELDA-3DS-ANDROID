@@ -357,12 +357,13 @@ bool TriAevumOot3dInputBackend::Poll(Fast::Fast3dWindow &window,
     const uint32_t secondaryH =
         androidInput.secondaryTouchH.load(std::memory_order_relaxed);
     if (secondaryW != 0U && secondaryH != 0U) {
-      const auto secondaryTouch = MapHostPointerToNativeA32TouchStretched(
+      const auto secondaryTouch = MapHostPointerToNativeA32Touch(
           static_cast<int32_t>(
               androidInput.secondaryTouchX.load(std::memory_order_relaxed)),
           static_cast<int32_t>(
               androidInput.secondaryTouchY.load(std::memory_order_relaxed)),
-          secondaryW, secondaryH, true);
+          secondaryW, secondaryH, true,
+          NativeA32TouchPresentation::NativeLowerScreen320x240);
       if (secondaryTouch.Inside) {
         frame.Hid.TouchX = secondaryTouch.X;
         frame.Hid.TouchY = secondaryTouch.Y;

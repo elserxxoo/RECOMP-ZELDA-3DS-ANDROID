@@ -506,7 +506,7 @@ class GfxRenderingAPIVulkan final : public GfxRenderingAPI, public Oot3d::TitleR
     void PickPhysicalDevice();
     void CreateLogicalDevice();
     void CreatePipelineCache();
-    void StorePipelineCache();
+    void StorePipelineCache(bool background = false);
     void FlushPipelineCache() override { StorePipelineCache(); }
     void CreateCommandResources();
     VkCommandBuffer SplitFrameForExternalCompute(VkSemaphore timelineSemaphore, uint64_t vulkanSignalValue,
@@ -694,6 +694,14 @@ class GfxRenderingAPIVulkan final : public GfxRenderingAPI, public Oot3d::TitleR
     std::mutex mPresentMutex;
     std::mutex mPipelineCacheMutex;
     std::atomic<uint32_t> mNewPipelinesSinceLastSave{0};
+    // Pipeline-cache files are written on a worker thread so zone loads do not hitch.
+    std::thread mPipelineCacheWriter;
+    std::atomic<bool> mPipelineCacheWriteInFlight{false};
+    // Hitch telemetry (render thread only).
+    double mPerfCompileMs = 0.0;
+    double mPerfSaveMs = 0.0;
+    uint64_t mPerfLastCreationNs = 0;
+    std::chrono::steady_clock::time_point mPerfLastFrame{};
     std::chrono::steady_clock::time_point mLastPipelineCacheSave{std::chrono::steady_clock::now()};
     std::condition_variable mPresentRequestCondition;
     std::condition_variable mPresentCompleteCondition;
