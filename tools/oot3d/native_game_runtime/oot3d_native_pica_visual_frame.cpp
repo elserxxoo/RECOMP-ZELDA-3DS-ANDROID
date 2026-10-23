@@ -1104,6 +1104,17 @@ void InterpolateCompatibleVisualRenderState(
                                         blendConstantColor);
 }
 
+// HUD / 2D overlay draws (no z-buffering, no depth test, no depth write) are
+// presented exactly as the guest drew them in the current frame. The guest
+// updates them at its native rate, and elements that appear, disappear or blink
+// (for example the Navi prompt) make ordinal matching pair them with a different
+// overlay draw, which then slides sideways and flickers when interpolated.
+bool IsOverlayLikeDraw(const Oot3dPicaVulkanDrawPlan& draw) {
+    const auto& state = draw.State;
+    return !state.Viewport.ZBuffering && !state.OutputMerger.Depth.TestEnabled &&
+           !state.OutputMerger.Depth.WriteEnabled;
+}
+
 void InterpolateCompatibleVisualDraw(const Oot3dPicaVulkanDrawPlan& previous, const Oot3dPicaVulkanDrawPlan& current,
                                      float alpha, Oot3dPicaVulkanDrawPlan& output) {
     output = current;
@@ -1144,6 +1155,10 @@ bool SampleVisualFrameWithMatching(const Oot3dPicaVisualFrame& previous, const O
         const auto& currentDraw = current.Draws[currentIndex];
         const auto match = matching.PreviousByCurrent[currentIndex];
         auto& sampled = output.Draws[currentIndex];
+        if (IsOverlayLikeDraw(currentDraw)) {
+            sampled = currentDraw;
+            continue;
+        }
         if (match.has_value()) {
             const auto& previousDraw = previous.Draws[match->PreviousIndex];
             InterpolateCompatibleVisualDraw(previousDraw, currentDraw, alpha, sampled);
@@ -1225,6 +1240,9 @@ bool SampleVisualFrameViewWithMatching(const Oot3dPicaVisualFrame& previous, con
         sampled.BlendConstantColor.reset();
         sampled.HasVertexBindingOverrides = false;
 
+        if (IsOverlayLikeDraw(currentDraw)) {
+            continue;
+        }
         const auto match = matching.PreviousByCurrent[currentIndex];
         if (!match.has_value()) {
             continue;
