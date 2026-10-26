@@ -10,11 +10,8 @@
 #include <cstdio>
 #include <cstdlib>
 #include <limits>
+#include <atomic>
 #include <optional>
-
-#if defined(__ANDROID__)
-#include "android_host.h"
-#endif
 #include <unordered_map>
 #include <utility>
 
@@ -815,12 +812,10 @@ void MatchMonotonicGroups(
 // Weak matches can pair a draw with a different one (an element that appears,
 // disappears or blinks shifts the ordinals), which shows up as objects or HUD
 // elements sliding or flickering in the generated in-between frames.
+std::atomic<int> gVisualInterpolationStrictness{0};
+
 int ReadInterpolationStrictness() {
-#if defined(__ANDROID__)
-    return GetAndroidOverlayInputState().interpolationStrictness.load(std::memory_order_relaxed);
-#else
-    return 0;
-#endif
+    return gVisualInterpolationStrictness.load(std::memory_order_relaxed);
 }
 
 VisualDrawMatching BuildVisualDrawMatching(
@@ -1319,6 +1314,15 @@ bool SampleVisualFrameViewWithMatching(const Oot3dPicaVisualFrame& previous, con
 }
 
 } // namespace
+
+void SetOot3dVisualInterpolationStrictness(int level) noexcept {
+    const int clamped = level < 0 ? 0 : (level > 2 ? 2 : level);
+    gVisualInterpolationStrictness.store(clamped, std::memory_order_relaxed);
+}
+
+int GetOot3dVisualInterpolationStrictness() noexcept {
+    return gVisualInterpolationStrictness.load(std::memory_order_relaxed);
+}
 
 struct Oot3dPicaPreparedVisualTransition::Impl {
     VisualDrawMatching Matching;

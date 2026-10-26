@@ -195,4 +195,10 @@ class Oot3dPicaVisualContinuityTracker final {
     std::vector<double> mAcceptedDeltas;
 };
 
+// Frame interpolation strictness (thread-safe, default 0):
+//   0 = normal, 1 = strict (no interpolation of draws matched only by pipeline
+//   layout), 2 = strictest (only draws with identical identity interpolate).
+void SetOot3dVisualInterpolationStrictness(int level) noexcept;
+int GetOot3dVisualInterpolationStrictness() noexcept;
+
 } // namespace Oot3dNativeGame

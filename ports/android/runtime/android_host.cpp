@@ -23,6 +23,11 @@
 
 #include "fast/backends/gfx_android.h"
 #include "fast/backends/gfx_android_secondary.h"
+
+// Implemented in oot3d_native_pica_visual_frame.cpp (frame interpolation).
+namespace Oot3dNativeGame {
+void SetOot3dVisualInterpolationStrictness(int level) noexcept;
+}
 #include "fast/Fast3dWindow.h"
 #include "fast/backends/gfx_rendering_api.h"
 #include "fast/oot3d/graphics_settings_persistence.h"
@@ -381,7 +386,7 @@ JNIEXPORT void JNICALL
 Java_org_triaevum_android_RenderTuning_nativeSetInterpolationStrictness(
     JNIEnv * /*env*/, jclass /*clazz*/, jint level) {
   const int clamped = level < 0 ? 0 : (level > 2 ? 2 : static_cast<int>(level));
-  GetAndroidOverlayInputState().interpolationStrictness.store(clamped, std::memory_order_relaxed);
+  Oot3dNativeGame::SetOot3dVisualInterpolationStrictness(clamped);
   __android_log_print(ANDROID_LOG_INFO, "TriAevum", "interpolation strictness = %d", clamped);
 }
 

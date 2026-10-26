@@ -26,8 +26,6 @@ struct AndroidOverlayInputState {
   // Device motion (Android SensorManager), already rotated into the screen
   // frame by the Java side: X right, Y up, Z toward the player.
   // gyro* in rad/s, accel* in m/s^2 (includes gravity).
-  // Frame interpolation strictness: 0 normal, 1 strict, 2 strictest.
-  std::atomic<int> interpolationStrictness{1};
   std::atomic<bool> motionEnabled{false};
   std::atomic<bool> motionValid{false};
   std::atomic<float> gyroX{0.0F};
