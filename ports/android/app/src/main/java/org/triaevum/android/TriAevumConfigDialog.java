@@ -59,6 +59,7 @@ public final class TriAevumConfigDialog extends Dialog {
     private Spinner mSpRenderScale;
     private Spinner mSpAAMode;
     private Spinner mSpFramerate;
+    private Spinner mSpInterp;
     private CheckBox mCbVSync;
     private CheckBox mCbShowFps;
     private CheckBox mCbCustomTextures;
@@ -191,6 +192,7 @@ public final class TriAevumConfigDialog extends Dialog {
         mSpRenderScale    = findViewById(R.id.sp_render_scale);
         mSpAAMode         = findViewById(R.id.sp_aa_mode);
         mSpFramerate      = findViewById(R.id.sp_framerate);
+        mSpInterp         = findViewById(R.id.sp_interp_strictness);
         mCbVSync          = findViewById(R.id.cb_vsync);
         mCbShowFps        = findViewById(R.id.cb_show_fps);
         mCbCustomTextures = findViewById(R.id.cb_custom_textures);
@@ -301,6 +303,7 @@ public final class TriAevumConfigDialog extends Dialog {
 
         // Framerate
         setupSpinner(mSpFramerate, TriAevumConfigManager.FRAMERATE_LABELS, null);
+        setupSpinner(mSpInterp, RenderTuning.LABELS, RenderTuning.readLevel(getContext()));
         String frMode = mConfig.getFrameRateMode();
         for (int i = 0; i < TriAevumConfigManager.FRAMERATE_VALUES.length; i++) {
             if (TriAevumConfigManager.FRAMERATE_VALUES[i].equals(frMode)) {
@@ -957,6 +960,7 @@ public final class TriAevumConfigDialog extends Dialog {
             .putBoolean("EmulationMenuSettings_HapticFeedback", haptic)
             .putBoolean("EmulationMenuSettings_SwapScreens", swapScr)
             .putBoolean(MotionSensorBridge.PREF_KEY, mCbGyro.isChecked())
+            .putInt(RenderTuning.PREF_KEY, mSpInterp.getSelectedItemPosition())
             .putBoolean("EmulationMenuSettings_TouchEnabled", touchScreen)
             .putBoolean("EmulationMenuSettings_JoystickRelCenter", joyRel)
             .putBoolean("EmulationMenuSettings_DpadSlideEnable", dpadSlide)
@@ -975,6 +979,7 @@ public final class TriAevumConfigDialog extends Dialog {
             Log.w(TAG, "Failed to apply native control settings", t);
         }
         MotionSensorBridge.refresh();
+        RenderTuning.applyFromPrefs(getContext());
 
         // Driver de GPU customizado (Turnip/Vulkan)
         if (mSpGpuDriver != null && mCustomDriverManager != null) {

@@ -11,6 +11,10 @@
 #include <cstdlib>
 #include <limits>
 #include <optional>
+
+#if defined(__ANDROID__)
+#include "android_host.h"
+#endif
 #include <unordered_map>
 #include <utility>
 
@@ -804,6 +808,21 @@ void MatchMonotonicGroups(
     }
 }
 
+// Interpolation strictness (runtime option, Android settings menu):
+//   0 = normal (all matches interpolate),
+//   1 = strict (draws matched only by pipeline layout are not interpolated),
+//   2 = strictest (only draws with identical identity interpolate).
+// Weak matches can pair a draw with a different one (an element that appears,
+// disappears or blinks shifts the ordinals), which shows up as objects or HUD
+// elements sliding or flickering in the generated in-between frames.
+int ReadInterpolationStrictness() {
+#if defined(__ANDROID__)
+    return GetAndroidOverlayInputState().interpolationStrictness.load(std::memory_order_relaxed);
+#else
+    return 0;
+#endif
+}
+
 VisualDrawMatching BuildVisualDrawMatching(
     const Oot3dPicaVisualFrame& previous,
     const Oot3dPicaVisualFrame& current) {
@@ -852,6 +871,28 @@ VisualDrawMatching BuildVisualDrawMatching(
                          previousPipeline, currentPipeline,
         HaveMatchingPipelineLayout, VisualDrawMatchKind::PipelineOrdinal,
         matching.PipelineOrdinalMatches);
+
+    if (const int strictness = ReadInterpolationStrictness(); strictness > 0) {
+        for (size_t currentIndex = 0; currentIndex < matching.PreviousByCurrent.size(); ++currentIndex) {
+            auto& match = matching.PreviousByCurrent[currentIndex];
+            if (!match.has_value()) {
+                continue;
+            }
+            const bool dropPipelineOnly = match->Kind == VisualDrawMatchKind::PipelineOrdinal;
+            const bool dropStructural = strictness >= 2 && match->Kind == VisualDrawMatchKind::StructuralOrdinal;
+            if (!dropPipelineOnly && !dropStructural) {
+                continue;
+            }
+            if (dropPipelineOnly) {
+                --matching.PipelineOrdinalMatches;
+            } else {
+                --matching.StructuralOrdinalMatches;
+            }
+            previousMatched[match->PreviousIndex] = false;
+            currentMatched[currentIndex] = false;
+            match.reset();
+        }
+    }
 
     matching.UnmatchedPrevious = static_cast<size_t>(std::count(
         previousMatched.begin(), previousMatched.end(), false));
@@ -1104,17 +1145,6 @@ void InterpolateCompatibleVisualRenderState(
                                         blendConstantColor);
 }
 
-// HUD / 2D overlay draws (no z-buffering, no depth test, no depth write) are
-// presented exactly as the guest drew them in the current frame. The guest
-// updates them at its native rate, and elements that appear, disappear or blink
-// (for example the Navi prompt) make ordinal matching pair them with a different
-// overlay draw, which then slides sideways and flickers when interpolated.
-bool IsOverlayLikeDraw(const Oot3dPicaVulkanDrawPlan& draw) {
-    const auto& state = draw.State;
-    return !state.Viewport.ZBuffering && !state.OutputMerger.Depth.TestEnabled &&
-           !state.OutputMerger.Depth.WriteEnabled;
-}
-
 void InterpolateCompatibleVisualDraw(const Oot3dPicaVulkanDrawPlan& previous, const Oot3dPicaVulkanDrawPlan& current,
                                      float alpha, Oot3dPicaVulkanDrawPlan& output) {
     output = current;
@@ -1155,10 +1185,6 @@ bool SampleVisualFrameWithMatching(const Oot3dPicaVisualFrame& previous, const O
         const auto& currentDraw = current.Draws[currentIndex];
         const auto match = matching.PreviousByCurrent[currentIndex];
         auto& sampled = output.Draws[currentIndex];
-        if (IsOverlayLikeDraw(currentDraw)) {
-            sampled = currentDraw;
-            continue;
-        }
         if (match.has_value()) {
             const auto& previousDraw = previous.Draws[match->PreviousIndex];
             InterpolateCompatibleVisualDraw(previousDraw, currentDraw, alpha, sampled);
@@ -1240,9 +1266,6 @@ bool SampleVisualFrameViewWithMatching(const Oot3dPicaVisualFrame& previous, con
         sampled.BlendConstantColor.reset();
         sampled.HasVertexBindingOverrides = false;
 
-        if (IsOverlayLikeDraw(currentDraw)) {
-            continue;
-        }
         const auto match = matching.PreviousByCurrent[currentIndex];
         if (!match.has_value()) {
             continue;

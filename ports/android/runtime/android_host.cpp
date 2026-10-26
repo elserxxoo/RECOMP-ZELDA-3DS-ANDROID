@@ -376,6 +376,15 @@ Java_org_triaevum_android_SecondaryDisplayPresenter_nativeSecondarySurfaceChange
   GetAndroidOverlayInputState().secondaryDisplayActive.store(win != nullptr);
 }
 
+// ---- Render tuning ----
+JNIEXPORT void JNICALL
+Java_org_triaevum_android_RenderTuning_nativeSetInterpolationStrictness(
+    JNIEnv * /*env*/, jclass /*clazz*/, jint level) {
+  const int clamped = level < 0 ? 0 : (level > 2 ? 2 : static_cast<int>(level));
+  GetAndroidOverlayInputState().interpolationStrictness.store(clamped, std::memory_order_relaxed);
+  __android_log_print(ANDROID_LOG_INFO, "TriAevum", "interpolation strictness = %d", clamped);
+}
+
 // ---- Device motion (gyroscope / accelerometer) ----
 JNIEXPORT void JNICALL
 Java_org_triaevum_android_MotionSensorBridge_nativeSetMotionEnabled(

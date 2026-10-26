@@ -520,6 +520,7 @@ public final class TriAevumActivity extends Activity {
         nativeOnResume();
         SecondaryDisplayPresenter.onActivityResume(this);
         MotionSensorBridge.onActivityResume(this);
+        RenderTuning.applyFromPrefs(this);
         updateFpsCounterVisibility();
         syncDisplayRefreshRate();
     }
