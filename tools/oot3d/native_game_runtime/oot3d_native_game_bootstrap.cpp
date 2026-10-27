@@ -864,10 +864,8 @@ bool ParseOot3dNativeGameArgs(int argc, char** argv, Oot3dNativeGameLaunch& laun
     }
 
     if (!launch.TopScreenConfigPath.empty()) {
-        if (launch.UiProfile != Oot3dNativeGame::Oot3dUiProfile::TopScreen) {
-            throw std::runtime_error(
-                "--topscreen-config requires --ui-profile topscreen");
-        }
+        // The config is also accepted with the dual-screen (oot3d) profile: only
+        // the free camera options take effect there (see the window runtime).
         if (!std::filesystem::is_regular_file(launch.TopScreenConfigPath)) {
             throw std::runtime_error(
                 "TopScreen UI config does not exist: " +

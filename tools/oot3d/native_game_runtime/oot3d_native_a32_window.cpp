@@ -1527,7 +1527,11 @@ bool ExecuteProductTopScreenHook(uint32_t pc, oot3d::recomp::a32::GuestState &st
                                    uint32_t blockBudget, uint32_t *blocksConsumed, void *user) {
   auto &dispatch = *static_cast<NativeCandidateDispatchState *>(user);
   // Product opt-in UI mod, not the experimental source/gameplay dispatcher.
-  if (!dispatch.TopScreenUiProfile || dispatch.Memory == nullptr ||
+  // The dual-screen (oot3d) profile only enables the free camera hooks.
+  const bool freeCameraPc = pc == kTopScreenCameraUpdateEntry ||
+                            pc == kTopScreenCameraUpdatePatchSite;
+  if ((!dispatch.TopScreenUiProfile && !freeCameraPc) ||
+      dispatch.Memory == nullptr ||
       (pc != kTopScreenCameraUpdateEntry && pc != kTopScreenCameraUpdatePatchSite &&
        pc != kTopScreenCameraNormal1Scalar &&
        pc != Oot3dNativeGame::kTopScreenInputUpdateBoundary &&
@@ -3515,6 +3519,10 @@ void RunOot3dNativeA32Window(const Oot3dNativeGameLaunch &launch) {
     const auto itemHooks = Oot3dNativeGame::TopScreenItemDispatchEntries();
     blockEntryHooks.insert(blockEntryHooks.end(), itemHooks.begin(), itemHooks.end());
     blockEntryHooks.push_back(Oot3dNativeGame::kTopScreenInputUpdateBoundary);
+  } else {
+    // Dual-screen profile: only the free camera is taken from the TopScreen module.
+    blockEntryHooks.push_back(kTopScreenCameraUpdateEntry);
+    blockEntryHooks.push_back(kTopScreenCameraUpdatePatchSite);
   }
   if (launch.ExtendedDiagnostics) {
     const std::array diagnosticHooks{
@@ -3764,6 +3772,12 @@ void RunOot3dNativeA32Window(const Oot3dNativeGameLaunch &launch) {
     nativeCandidateEntries.insert(nativeCandidateEntries.end(),
                                   topScreenSourcePortBlocks.begin(),
                                   topScreenSourcePortBlocks.end());
+  } else {
+    // Dual-screen profile: free camera only. The exit is only taken while the
+    // free camera option is enabled (see ApplyNativeWidescreenProjectionPolicy).
+    nativeCandidateEntries.push_back(kTopScreenCameraUpdateEntry);
+    nativeCandidateEntries.push_back(kTopScreenCameraUpdatePatchSite);
+    wholeAotObservableExitBlocks.push_back(kTopScreenCameraUpdateEntry);
   }
   std::sort(wholeAotObservableExitBlocks.begin(),
             wholeAotObservableExitBlocks.end());
@@ -3905,10 +3919,10 @@ void RunOot3dNativeA32Window(const Oot3dNativeGameLaunch &launch) {
                                    &nativeCandidateDispatch);
   }
 #else
-  if (nativeCandidateDispatch.TopScreenUiProfile) {
-    process.SetNativeBlockCallback(&ExecuteProductTopScreenHook,
-                                   &nativeCandidateDispatch);
-  }
+  // Also installed for the dual-screen profile: it only receives the free
+  // camera entries there, everything else is not registered.
+  process.SetNativeBlockCallback(&ExecuteProductTopScreenHook,
+                                 &nativeCandidateDispatch);
 #endif
   if (!Oot3dNativeGame::MountNativeA32ProcessImage(
           process, *manifest, std::filesystem::path{}, &error)) {
