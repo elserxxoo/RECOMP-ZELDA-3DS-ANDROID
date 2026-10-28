@@ -140,13 +140,9 @@ std::vector<uint32_t> CompileShadercSpirv(std::string_view source, SpirvStage st
     thread_local shaderc::Compiler compiler;
     shaderc::CompileOptions options;
     options.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_1);
-#if defined(__ANDROID__)
-    // Mobile: skip the SPIR-V optimizer. The GPU driver optimizes the module
-    // itself, and the optimizer made each new shader a multi-frame hitch.
-    options.SetOptimizationLevel(shaderc_optimization_level_zero);
-#else
+    // Keep the optimizer on: unoptimized SPIR-V is larger and made the GPU driver
+    // spend much longer in vkCreateGraphicsPipelines (measured on device).
     options.SetOptimizationLevel(shaderc_optimization_level_performance);
-#endif
     const auto result = compiler.CompileGlslToSpv(source.data(), source.size(), kind, name, options);
     if (result.GetCompilationStatus() != shaderc_compilation_status_success)
         throw std::runtime_error(std::string("shaderc failed for ") + name + ": " + result.GetErrorMessage());

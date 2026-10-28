@@ -20,6 +20,10 @@
 
 #include <nlohmann/json.hpp>
 
+#if defined(__ANDROID__)
+#include <android/log.h>
+#endif
+
 namespace Oot3dNativeGame {
 namespace {
 
@@ -3599,6 +3603,29 @@ NativeA32HostResult NativeA32CtrHostServices::HandleSvc(
                         mSvcEvents.push_back(std::move(event));
                         return {NativeA32HostAction::Resume};
                     }
+                } else {
+                    // Service this host does not provide (for example y2r:u, used by the
+                    // Sheikah Stone hint movies). Answer like the 3DS service manager does
+                    // for an unavailable service instead of halting the whole guest forever.
+                    constexpr uint32_t kSrvServiceUnavailableResult = 0xD8A06406U;
+#if defined(__ANDROID__)
+                    __android_log_print(ANDROID_LOG_WARN, "TriAevum",
+                                        "Guest requested unsupported 3DS service '%s' "
+                                        "(pc=0x%08X): returning an error",
+                                        serviceName.c_str(), state.r[15]);
+#endif
+                    if (memory.Write32(commandBuffer,
+                                       kSrvGetServiceHandleResponse) &&
+                        memory.Write32(commandBuffer + 4U,
+                                       kSrvServiceUnavailableResult) &&
+                        memory.Write32(commandBuffer + 8U,
+                                       kMoveHandleDescriptor) &&
+                        memory.Write32(commandBuffer + 12U, 0U)) {
+                        state.r[0] = kResultSuccess;
+                        event.Handled = true;
+                        mSvcEvents.push_back(std::move(event));
+                        return {NativeA32HostAction::Resume};
+                    }
                 }
             }
         }
@@ -3624,6 +3651,11 @@ NativeA32HostResult NativeA32CtrHostServices::HandleSvc(
         return {NativeA32HostAction::Resume};
     default:
         event.Name = "unimplemented";
+#if defined(__ANDROID__)
+        __android_log_print(ANDROID_LOG_WARN, "TriAevum",
+                            "Guest issued unimplemented SVC 0x%02X (pc=0x%08X): halting",
+                            immediate, state.r[15]);
+#endif
         mSvcEvents.push_back(std::move(event));
         return {NativeA32HostAction::Wait};
     }
